@@ -1,0 +1,41 @@
+{
+  "id": "kafka",
+  "container": {
+    "docker": {
+      "image": "wurstmeister/kafka",
+      "network": "HOST",
+      "forcePullImage": true,
+      "privileged": true,
+      "parameters": [
+        {
+          "key": "env",
+          "value": "KAFKA_ZOOKEEPER_CONNECT=178.128.196.126:2181/kafka"
+        },
+        {
+          "key": "env",
+          "value": "KAFKA_ADVERTISED_LISTENERS=INSIDE://:9091,OUTSIDE://:9093"
+        },
+        {
+          "key": "env",
+          "value": "KAFKA_LISTENERS=INSIDE://:9091,OUTSIDE://:9093"
+        },
+        {
+          "key": "env",
+          "value": "HOSTNAME_COMMAND=ip route get 8.8.8.8 | awk '{print ; exit}'"
+        },
+        {
+          "key": "env",
+          "value": "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT"
+        },
+        {
+          "key": "env",
+          "value": "KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE"
+        }
+      ]
+    }
+  },
+  "cpus": 2,
+  "mem": 2048,
+  "instances": 1
+}
+

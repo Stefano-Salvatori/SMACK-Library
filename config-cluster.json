@@ -1,0 +1,14 @@
+{
+  "user": "root",
+  "password": "password",
+  "masters": [
+    "178.128.194.125"
+  ],
+  "agents": [
+    "178.128.198.168",
+    "178.128.206.24"
+
+  ],
+  "cassandra-instances": 1,
+  "kafka-instances": 1
+}
