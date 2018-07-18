@@ -1,10 +1,13 @@
 #!/bin/bash
-#install java8
-echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
-echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-sudo add-apt-repository ppa:webupd8team/java -y
+#install java
 sudo apt-get update
-sudo apt-get install oracle-java8-installer -y
+sudo apt-get install default-jdk -y
+#echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+#echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
+#sudo add-apt-repository ppa:webupd8team/java -y
+#sudo apt-get update
+#sudo apt-get install oracle-java8-installer -y
+
 
 #install mesos
 #mesos, zookeeper
@@ -26,10 +29,10 @@ sudo apt-get update
 sudo apt-get install docker-ce -y
 
 #start slave
-sudo stop mesos-master
-sudo stop mesos-slave
-sudo stop marathon
-sudo stop zookeeper
+sudo service mesos-master stop
+sudo service mesos-slave stop
+sudo service marathon stop
+sudo service zookeeper stop
 sudo mkdir /tmp/spark-events
 my_ip=`ip route get 8.8.8.8 | awk '{print $NF; exit}'`
 master=$1
@@ -40,4 +43,4 @@ sudo cp /etc/mesos-slave/ip /etc/mesos-slave/hostname
 sudo echo 'docker,mesos' > /etc/mesos-slave/containerizers
 sudo echo '10mins' > /etc/mesos-slave/executor_registration_timeout
 sudo rm -f /var/lib/mesos/meta/slaves/latest
-sudo start mesos-slave
+sudo service mesos-slave start

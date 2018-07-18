@@ -12,18 +12,12 @@
         9042
       ],
       "privileged": true,
-      "forcePullImage": true,
-      "parameters": [
-        {
-          "key": "env",
-          "value": "CASSANDRA_CLUSTERNAME=cassandra-cluster"
-        },
-        {
-          "key": "env",
-          "value": "CASSANDRA_SEEDS = 165.227.146.22,165.227.158.35,165.227.160.105,159.89.18.102,165.227.132.16 "
-        }
-      ]
+      "forcePullImage": true
     }
+  },
+  "env": {
+    "CASSANDRA_CLUSTERNAME": "cassandra-cluster",
+    "CASSANDRA_SEEDS": "165.227.146.22,165.227.158.35,165.227.160.105,159.89.18.102,165.227.132.16 "
   },
   "cpus": 2,
   "mem": 2048,

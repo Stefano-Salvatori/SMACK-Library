@@ -8,7 +8,7 @@ KAFKA_INSTANCES=${!i}
 
 
 #Start SPARK Framework in the cluster
-ssh -t stefano@$MASTER 'sudo ./spark-2.3.0-bin-hadoop2.7/sbin/spark-daemon.sh start org.apache.spark.deploy.mesos.MesosClusterDispatcher 1 --host '$MASTER' --port 7077 --conf spark.driver.host='$MASTER' --master mesos://'$MASTER':5050'
+ssh -t stefano@$MASTER 'sudo ./spark-2.3.1-bin-hadoop2.7/sbin/spark-daemon.sh start org.apache.spark.deploy.mesos.MesosClusterDispatcher 1 --host '$MASTER' --port 7077 --conf spark.driver.host='$MASTER' --master mesos://'$MASTER':5050'
 
 #Start CASSANDRA on marathon
 echo "{
