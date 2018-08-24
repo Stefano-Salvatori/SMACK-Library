@@ -1,29 +1,29 @@
 import java.io.{BufferedReader, File, InputStreamReader}
+import java.nio.file.{Files, Paths}
 
-import ch.ethz.ssh2.{Connection, StreamGobbler}
-import com.decodified.scalassh._
-import net.schmizz.sshj.transport.verification.PromiscuousVerifier
+import ch.ethz.ssh2.{Connection, SCPClient, StreamGobbler}
 
 object Node {
   def apply(ip: String, usr: String, psw: String) = new Node(ip, usr, psw)
 }
 
 case class Node(ip: String, usr: String, psw: String) {
-  lazy val connectionConfig = HostConfig(PasswordLogin(usr, SimplePasswordProducer(psw)),
-                                          hostKeyVerifier = new PromiscuousVerifier())
 
   def getIp: String = this.ip
 
 
   def executeScript(script: Scripts, params: String*) = {
-    val scriptName = new File(script.getPath).getName
-    SSH(this.ip, HostConfigProvider.fromHostConfig(connectionConfig)) {
-      client => {
-        client upload(script.getPath, ".")
-        client exec s"chmod u+x $scriptName"
-      }
-    }
-    this.executeCommand(s"./$scriptName ${params.mkString(" ")}; rm ./$scriptName")
+    val scriptFile = new File(script.getPath)
+    val conn = new Connection(this.getIp)
+    conn.connect()
+    conn.authenticateWithPassword(this.usr, this.psw)
+    val scp = new SCPClient(conn)
+    val ouputStream = scp.put(scriptFile.getName, scriptFile.length, ".", "7777")
+    ouputStream.write(Files.readAllBytes(Paths.get(script.getPath)))
+    ouputStream.close()
+    conn.close()
+    this.executeCommand(s"./${scriptFile.getName} ${params.mkString(" ")}")
+    this.executeCommand(s"rm ./${scriptFile.getName}")
   }
 
 
@@ -40,7 +40,7 @@ case class Node(ip: String, usr: String, psw: String) {
     val stdout = new StreamGobbler(sess.getStdout)
     val br = new BufferedReader(new InputStreamReader(stdout))
     var line: String = ""
-    do{
+    do {
       println(line)
       line = br.readLine()
     } while (line != null)

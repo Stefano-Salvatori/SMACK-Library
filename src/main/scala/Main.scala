@@ -29,6 +29,8 @@ object Main {
                                 .map(s => Node(s, configurations.user, configurations.password))
                             )
 
+
+
     //mesos.createCluster()
     //SPARK
     //start spark framework
@@ -40,6 +42,7 @@ object Main {
 
     //CASSANDRA
     val cassandra = MarathonTask("cassandra-app.json")
+    cassandra.saveAsJson("a")
     cassandra.env += "CASSANDRA_CLUSTERNAME" -> "cassandra-cluster"
     cassandra.env += "CASSANDRA_SEEDS" -> mesos.getAgents.map(_.getIp).mkString(",")
     for (c <- 1 to configurations.cassandraInstances) {

@@ -25,10 +25,7 @@ case object MarathonTask {
     * @return
     * the task object
     */
-  def apply(json: String): MarathonTask = {
-    parse(Source.fromFile(json).getLines.mkString).extract[MarathonTask]
-
-  }
+  def apply(json: String): MarathonTask = parse(Source.fromFile(json).getLines.mkString).extract[MarathonTask]
 
 }
 
@@ -37,22 +34,12 @@ import MarathonTask.Container
 
 
 case class MarathonTask(var id: String,
-                        container: Container,
+                        container: Option[Container],
                         var env: Map[String, String],
                         cpus: Double,
                         mem: Double,
                         cmd: Option[String],
                         var instances: Int) extends Task {
-
-  def this(id: String,
-           container: Container,
-           env: Map[String, String],
-           cpus: Double,
-           mem: Double,
-           instances: Int) {
-    this(id, container, env, cpus, mem, None, instances)
-  }
-
 
   def saveAsJson(fileName: String): Unit = {
     val bw = new BufferedWriter(new FileWriter(new File(s"$fileName.json")))

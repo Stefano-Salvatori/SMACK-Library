@@ -10,7 +10,7 @@ trait Task {
 
   val cmd: Option[String]
 
-  val container: Container
+  val container: Option[Container]
 
   var env: Map[String, String]
 
