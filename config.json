@@ -2,12 +2,12 @@
   "user": "root",
   "password": "password",
   "masters": [
-    "207.154.204.163"
+    "142.93.165.80"
   ],
   "agents": [
-    "138.197.189.138",
-    "165.227.133.39"
+    "104.248.30.100",
+    "104.248.30.77"
   ],
-  "cassandraInstances": 2,
-  "kafkaInstances": 2
+  "cassandraInstances": 1,
+  "kafkaInstances": 1
 }

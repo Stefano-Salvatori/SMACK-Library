@@ -8,4 +8,5 @@ libraryDependencies += "com.lihaoyi" %% "ujson" % "0.6.6"
 libraryDependencies += "com.decodified" %% "scala-ssh" % "0.9.0"
 //Uncomment to enable logging
 //libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
+libraryDependencies += "org.jvnet.hudson" % "ganymed-ssh-2" % "build260"
 libraryDependencies += "net.liftweb" %% "lift-json" % "3.3.0"

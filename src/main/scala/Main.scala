@@ -1,3 +1,6 @@
+import java.io.{BufferedWriter, File, FileWriter}
+
+import net.liftweb.json.Serialization.write
 import net.liftweb.json.{DefaultFormats, parse}
 
 import scala.io.Source
@@ -26,30 +29,27 @@ object Main {
                                 .map(s => Node(s, configurations.user, configurations.password))
                             )
 
-
     //mesos.createCluster()
-    mesos.addAgent(new Node("165.227.133.39", configurations.user,configurations.password))
     //SPARK
     //start spark framework
     /*mesos.getMaster.executeCommand("./spark-2.3.1-bin-hadoop2.7/sbin/spark-daemon.sh " +
-                                     "start org.apache.spark.deploy.mesos.MesosClusterDispatcher 1 " +
-                                     s"--host ${mesos.getMaster.getIp} --port 7077 " +
-                                     s"--conf spark.driver.host=${mesos.getMaster.getIp} " +
-                                     s"--master mesos://${mesos.getMaster.getIp}:5050)")*/
+      "start org.apache.spark.deploy.mesos.MesosClusterDispatcher 1 " +
+      s"--host ${mesos.getMaster.getIp} --port 7077 " +
+      s"--conf spark.driver.host=${mesos.getMaster.getIp} " +
+      s"--master mesos://${mesos.getMaster.getIp}:5050")*/
 
     //CASSANDRA
-    /*val cassandra = parse(Source.fromFile("cassandra-app.json").getLines.mkString)
-      .extract[MarathonApp]
+    val cassandra = MarathonTask("cassandra-app.json")
     cassandra.env += "CASSANDRA_CLUSTERNAME" -> "cassandra-cluster"
-    cassandra.env += "CASSANDRA_SEEDS" -> mesos.getAgents.mkString(",")
+    cassandra.env += "CASSANDRA_SEEDS" -> mesos.getAgents.map(_.getIp).mkString(",")
     for (c <- 1 to configurations.cassandraInstances) {
       cassandra.id = s"cassandra$c"
       mesos.run(cassandra)
-    }*/
+    }
 
     //KAFKA
-    /*val kafka = parse(Source.fromFile("kafka-app.json").getLines.mkString).extract[MarathonApp]
-    kafka.env += "KAFKA_ZOOKEEPER_CONNECT" -> s"${mesos.getMaster}:2181/kafka"
+    val kafka = MarathonTask("kafka-app.json")
+    kafka.env += "KAFKA_ZOOKEEPER_CONNECT" -> s"${mesos.getMaster.getIp}:2181/kafka"
     for (k <- 1 to configurations.kafkaInstances) {
       val insidePort = KAFKA_STARTING_INSIDE_PORT - k
       val outsidePort = KAFKA_STARTING_OUTSIDE_PORT - k
@@ -58,7 +58,7 @@ object Main {
         s"OUTSIDE://:$outsidePort")
       kafka.env += "KAFKA_LISTENERS" -> s"INSIDE://:$insidePort,OUTSIDE://:$outsidePort"
       mesos.run(kafka)
-    }*/
+    }
 
 
   }

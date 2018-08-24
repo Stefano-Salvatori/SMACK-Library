@@ -1,16 +1,21 @@
 #!/bin/bash
-
+export DEBIAN_FRONTEND=noninteractive
 #install spark
-echo "Getting Spark package..."
+echo "Installing Spark..."
 file="spark-2.3.1-bin-hadoop2.7.tgz"
-if [ -f "$file" ]
-then
-	echo "$file alredy installed"
+directory="spark-2.3.1-bin-hadoop2.7"
+if [ ! -f "$file" ]; then
+    wget http://mirror.nohup.it/apache/spark/spark-2.3.1/$file
 else
-	wget http://mirror.nohup.it/apache/spark/spark-2.3.1/$file
-	tar -xzvf $file
-
+	echo "Spark package $file already exists"
 fi
+if [ ! -d "$directory" ]; then
+    echo "Extracting package into $directory..."
+    tar -xzvf $file
+else
+    echo "Spark directory $directory already exists"
+fi
+
 
 #install java
 echo "Installing Java..."

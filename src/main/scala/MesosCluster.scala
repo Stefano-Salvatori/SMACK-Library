@@ -43,7 +43,7 @@ case class MesosCluster(master: Node, agents: ListBuffer[Node])
     * @throws IllegalStateException if the installComponents() method was never called before
     */
   private def startCluster(): Unit = {
-    if (!this.requirementsInstalled) throw new IllegalStateException()
+    //if (!this.requirementsInstalled) throw new IllegalStateException()
     master.executeScript(Scripts.START_MASTER)
     agents.foreach(a => a.executeScript(Scripts.START_AGENT, master.getIp))
   }
@@ -56,7 +56,7 @@ case class MesosCluster(master: Node, agents: ListBuffer[Node])
   }
 
   /**
-    * Creates the mesos cluster; Automatically starts Marathon framework to allow launching
+    * Create and run the mesos cluster; Automatically starts Marathon framework to allow launching
     * applications(commands, docker images...) over the cluster
     */
   def createCluster(): Unit = {
@@ -69,16 +69,15 @@ case class MesosCluster(master: Node, agents: ListBuffer[Node])
   /**
     * Run an app on the cluster. Throws an IllegalStateException() if the cluster is not started
     *
-    * @param marathonApp
+    * @param marathonTask
     * the app to run
     */
-  def run(marathonApp: MarathonApp): Unit = {
-    if (!clusterStarted) throw new IllegalStateException()
-    val bw = new BufferedWriter(new FileWriter(new File(s"${marathonApp.id}.json")))
-    bw.write(write(marathonApp))
+  def run(marathonTask: MarathonTask): Unit = {
+    // if (!clusterStarted) throw new IllegalStateException()
+    marathonTask.saveAsJson(marathonTask.id)
     (this.curlCmd + " -X POST -H \"Content-type: application/json\" " +
-      s"$master:8080/v2/apps " +
-      s"-d@${marathonApp.id}.json") !!
+      s"${master.getIp}:8080/v2/apps " +
+      s"-d@${marathonTask.id}.json") !
   }
 
   def getAgents: List[Node] = this.agents.toList
