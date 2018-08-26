@@ -16,5 +16,6 @@ trait Task {
 
   var instances: Int
 
+  def saveAsJson(): Unit
 
 }

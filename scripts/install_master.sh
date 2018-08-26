@@ -5,7 +5,9 @@ echo "Installing Spark..."
 file="spark-2.3.1-bin-hadoop2.7.tgz"
 directory="spark-2.3.1-bin-hadoop2.7"
 if [ ! -f "$file" ]; then
-    wget http://mirror.nohup.it/apache/spark/spark-2.3.1/$file
+    echo "Getting spark package from http://mirror.nohup.it/apache/spark/spark-2.3.1/$file"
+    wget -4 http://mirror.nohup.it/apache/spark/spark-2.3.1/$file
+    echo "File downloaded!"
 else
 	echo "Spark package $file already exists"
 fi

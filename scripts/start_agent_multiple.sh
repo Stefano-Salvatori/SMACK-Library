@@ -7,9 +7,17 @@ sudo service marathon stop
 sudo service zookeeper stop
 sudo mkdir -p /tmp/spark-events
 my_ip=`ip route get 8.8.8.8 | awk '{print $NF; exit}'`
-master=$1
 sudo hostname $my_ip
-echo zk://$master:2181/mesos > /etc/mesos/zk
+echo -n "zk://" > /etc/mesos/zk
+
+for var in "$@"
+do
+    echo -n "$var:2181," >> /etc/mesos/zk
+done
+
+#remove last comma before closing zookeeper config string
+truncate -s-1 /etc/mesos/zk
+echo "/mesos" >> /etc/mesos/zk
 echo $my_ip > /etc/mesos-slave/ip
 sudo cp /etc/mesos-slave/ip /etc/mesos-slave/hostname
 sudo echo 'docker,mesos' > /etc/mesos-slave/containerizers

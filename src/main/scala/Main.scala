@@ -29,7 +29,16 @@ object Main {
                                 .map(s => Node(s, configurations.user, configurations.password))
                             )
 
+    /*configurations.masters.map(s =>Node(s, configurations.user, configurations.password))
+      .foreach(n => {
+        n.executeScript(Scripts.START_MULTIPLE_MASTER, configurations.masters: _*)
+      })*/
 
+    configurations.agents.map(s =>Node(s, configurations.user, configurations.password))
+      .foreach(n => {
+        //n.executeScript(Scripts.INSTALL_AGENT)
+        n.executeScript(Scripts.START_AGENT_MULTIPLE, configurations.masters: _*)
+      })
 
     //mesos.createCluster()
     //SPARK
@@ -41,8 +50,8 @@ object Main {
       s"--master mesos://${mesos.getMaster.getIp}:5050")*/
 
     //CASSANDRA
+    /*
     val cassandra = MarathonTask("cassandra-app.json")
-    cassandra.saveAsJson("a")
     cassandra.env += "CASSANDRA_CLUSTERNAME" -> "cassandra-cluster"
     cassandra.env += "CASSANDRA_SEEDS" -> mesos.getAgents.map(_.getIp).mkString(",")
     for (c <- 1 to configurations.cassandraInstances) {
@@ -62,6 +71,7 @@ object Main {
       kafka.env += "KAFKA_LISTENERS" -> s"INSIDE://:$insidePort,OUTSIDE://:$outsidePort"
       mesos.run(kafka)
     }
+    */
 
 
   }

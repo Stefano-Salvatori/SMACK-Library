@@ -41,8 +41,8 @@ case class MarathonTask(var id: String,
                         cmd: Option[String],
                         var instances: Int) extends Task {
 
-  def saveAsJson(fileName: String): Unit = {
-    val bw = new BufferedWriter(new FileWriter(new File(s"$fileName.json")))
+  def saveAsJson(): Unit = {
+    val bw = new BufferedWriter(new FileWriter(new File(s"$id.json")))
     val toWrite = prettyRender(parse(write(this)(formats = MarathonTask.formats)))
     bw.write(toWrite)
     bw.close()

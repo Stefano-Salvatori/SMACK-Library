@@ -5,7 +5,7 @@ sudo service mesos-master stop
 sudo service mesos-slave stop
 sudo service marathon stop
 sudo service zookeeper stop
-sudo mkdir /tmp/spark-events
+sudo mkdir -p /tmp/spark-events
 my_ip=`ip route get 8.8.8.8 | awk '{print $NF; exit}'`
 sudo hostname $my_ip
 echo zk://$my_ip:2181/mesos > /etc/mesos/zk

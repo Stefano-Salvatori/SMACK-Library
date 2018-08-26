@@ -1,8 +1,5 @@
-import java.io.{BufferedWriter, File, FileWriter}
-
 import scala.sys.process._
 import net.liftweb.json.DefaultFormats
-import net.liftweb.json.Serialization.write
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
 
 import scala.collection.mutable.ListBuffer
@@ -74,7 +71,7 @@ case class MesosCluster(master: Node, agents: ListBuffer[Node])
     */
   def run(marathonTask: MarathonTask): Unit = {
     // if (!clusterStarted) throw new IllegalStateException()
-    marathonTask.saveAsJson(marathonTask.id)
+    marathonTask.saveAsJson()
     (this.curlCmd + " -X POST -H \"Content-type: application/json\" " +
       s"${master.getIp}:8080/v2/apps " +
       s"-d@${marathonTask.id}.json") !
