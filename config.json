@@ -1,13 +1,14 @@
 {
+  "clusterName": "TestCluster",
   "user": "root",
   "password": "password",
   "masters": [
-    "142.93.98.109",
-    "142.93.164.225",
-    "142.93.162.37"
+    "178.128.198.254",
+    "142.93.169.236",
+    "178.128.207.160"
   ],
   "agents": [
-    "104.248.29.107"
+    "178.128.196.49"
   ],
   "cassandraInstances": 1,
   "kafkaInstances": 1

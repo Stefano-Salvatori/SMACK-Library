@@ -1,55 +1,59 @@
+
 import scala.sys.process._
 import net.liftweb.json.DefaultFormats
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
 
-import scala.collection.mutable.ListBuffer
-
 object MesosCluster {
-  def apply(master: Node, agents: List[Node]): MesosCluster = {
-    new MesosCluster(master, agents.to[ListBuffer])
+  private val DEFAULT_NAME: String = "Mesos Cluster"
+
+  def apply(clusterName: String, masters: List[Node], agents: List[Node])
+  : MesosCluster = {
+    new MesosCluster(clusterName, masters, agents)
   }
 
-  def apply(master: Node): MesosCluster = {
-    new MesosCluster(master, ListBuffer())
+  def apply(masters: List[Node], agents: List[Node]): MesosCluster = {
+    new MesosCluster(DEFAULT_NAME, masters, agents)
   }
+
+  def apply(masters: List[Node]): MesosCluster = {
+    new MesosCluster(DEFAULT_NAME, masters, List())
+  }
+
+
 }
 
-case class MesosCluster(master: Node, agents: ListBuffer[Node])
+case class MesosCluster(clusterName: String, masters: List[Node], var agents: List[Node])
   extends Cluster {
-  private var requirementsInstalled = false
-  private var clusterStarted = false
   private lazy val curlCmd = System.getProperty("os.name") match {
     case s if s.startsWith("Windows") => "curl.exe"
     case _ => "curl"
   }
+  private lazy val zkConnectionString = s"zk://${masters.map(_.getIp.concat(":2181")).mkString(",")}"
   implicit val formats: DefaultFormats.type = DefaultFormats
 
   /**
     * Install the required software on each node on the cluster.
     */
   private def installComponents(): Unit = {
-    master.executeScript(Scripts.INSTALL_MASTER)
-    agents.foreach(a => a.executeScript(Scripts.INSTALL_AGENT))
-    this.requirementsInstalled = true
+    masters.foreach(_.executeScript(Scripts.INSTALL_MASTER))
+    agents.foreach(_.executeScript(Scripts.INSTALL_AGENT))
   }
 
   /**
     * Start mesos masters , mesos agents and marathon framework to allow launching
     * applications over the cluster.
-    *
-    * @throws IllegalStateException if the installComponents() method was never called before
-    */
+    **/
   private def startCluster(): Unit = {
-    //if (!this.requirementsInstalled) throw new IllegalStateException()
-    master.executeScript(Scripts.START_MASTER)
-    agents.foreach(a => a.executeScript(Scripts.START_AGENT, master.getIp))
+    masters.foreach(node =>
+      node.executeScript(Scripts.START_MULTIPLE_MASTER, clusterName :: masters.map(_.getIp): _*))
+    agents.foreach(a => a.executeScript(Scripts.START_AGENT_MULTIPLE, masters.map(_.getIp): _*))
   }
 
   def startMarathon(): Unit = {
-    master.executeCommand("screen -d -m marathon " +
-      s"--master zk://${master.getIp}:2181/mesos " +
-      s"--zk zk://${master.getIp}:2181/marathon " +
-      "--task_launch_timeout 650000")
+    masters.foreach(_.executeCommand("screen -d -m marathon " +
+      s"--master $zkConnectionString/mesos " +
+      s"--zk $zkConnectionString/marathon " +
+      "--task_launch_timeout 650000"))
   }
 
   /**
@@ -57,10 +61,9 @@ case class MesosCluster(master: Node, agents: ListBuffer[Node])
     * applications(commands, docker images...) over the cluster
     */
   def createCluster(): Unit = {
-    this.installComponents()
-    this.startCluster()
+    //this.installComponents()
+    //this.startCluster()
     this.startMarathon()
-    this.clusterStarted = true
   }
 
   /**
@@ -70,16 +73,15 @@ case class MesosCluster(master: Node, agents: ListBuffer[Node])
     * the app to run
     */
   def run(marathonTask: MarathonTask): Unit = {
-    // if (!clusterStarted) throw new IllegalStateException()
     marathonTask.saveAsJson()
     (this.curlCmd + " -X POST -H \"Content-type: application/json\" " +
-      s"${master.getIp}:8080/v2/apps " +
+      s"$zkConnectionString/marathon:8080/v2/apps " +
       s"-d@${marathonTask.id}.json") !
   }
 
-  def getAgents: List[Node] = this.agents.toList
+  def getAgents: List[Node] = this.agents
 
-  def getMaster: Node = this.master
+  def getMasters: List[Node] = this.masters
 
   /**
     * Add an agent node to the cluster
@@ -90,8 +92,8 @@ case class MesosCluster(master: Node, agents: ListBuffer[Node])
   override def addAgent(node: Node) = {
     println("Adding agent to the cluster")
     node.executeScript(Scripts.INSTALL_AGENT)
-    node.executeScript(Scripts.START_AGENT, master.getIp)
-    this.agents += node
+    node.executeScript(Scripts.START_MASTER, masters.map(_.getIp): _*)
+    node :: this.agents
   }
 
   override def shutdownCluster() = {
@@ -119,7 +121,7 @@ case class MesosCluster(master: Node, agents: ListBuffer[Node])
       case None => println("Cannot find a node with this ip")
       case Some(n) =>
         n.executeCommand("sudo service mesos-slave stop")
-        this.agents -= n
+        this.agents = this.agents.filter(agent => agent != n)
         println("Node removed")
     }
 

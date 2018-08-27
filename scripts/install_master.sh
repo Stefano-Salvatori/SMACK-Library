@@ -1,28 +1,30 @@
 #!/bin/bash
 export DEBIAN_FRONTEND=noninteractive
 #install spark
-echo "Installing Spark..."
-file="spark-2.3.1-bin-hadoop2.7.tgz"
-directory="spark-2.3.1-bin-hadoop2.7"
-if [ ! -f "$file" ]; then
-    echo "Getting spark package from http://mirror.nohup.it/apache/spark/spark-2.3.1/$file"
-    wget -4 http://mirror.nohup.it/apache/spark/spark-2.3.1/$file
-    echo "File downloaded!"
-else
-	echo "Spark package $file already exists"
-fi
-if [ ! -d "$directory" ]; then
-    echo "Extracting package into $directory..."
-    tar -xzvf $file
-else
-    echo "Spark directory $directory already exists"
-fi
+#echo "Installing Spark..."
+#sudo mkdir -p /tmp/spark-events
+#file="spark-2.3.1-bin-hadoop2.7.tgz"
+#directory="spark-2.3.1-bin-hadoop2.7"
+#if [ ! -f "$file" ]; then
+#    echo "Getting spark package from http://mirror.nohup.it/apache/spark/spark-2.3.1/$file"
+#   wget -4 http://mirror.nohup.it/apache/spark/spark-2.3.1/$file
+#  echo "File downloaded!"
+#else
+#	echo "Spark package $file already exists"
+#fi
+#if [ ! -d "$directory" ]; then
+#    echo "Extracting package into $directory..."
+#    tar -xzvf $file
+#else
+#    echo "Spark directory $directory already exists"
+#fi
 
 
 #install java
 echo "Installing Java..."
 sudo apt-get update
 sudo apt-get install default-jdk -y
+sudo apt-get install scala -y
 
 #install mesosphere package
 #mesos, marathon, chronos zookeeper...

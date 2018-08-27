@@ -7,7 +7,7 @@ sudo service marathon stop
 sudo service zookeeper stop
 sudo mkdir -p /tmp/spark-events
 my_ip=`ip route get 8.8.8.8 | awk '{print $NF; exit}'`
-sudo hostname $my_ip
+#sudo hostname $my_ip
 echo -n "zk://" > /etc/mesos/zk
 
 for var in "$@"

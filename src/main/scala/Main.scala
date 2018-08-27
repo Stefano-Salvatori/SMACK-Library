@@ -9,7 +9,8 @@ object Main {
   val KAFKA_STARTING_OUTSIDE_PORT = 9095
   val KAFKA_STARTING_INSIDE_PORT = 9093
 
-  case class SmackConfiguration(user: String,
+  case class SmackConfiguration(clusterName: String,
+                                user: String,
                                 password: String,
                                 masters: List[String],
                                 agents: List[String],
@@ -21,26 +22,16 @@ object Main {
     val fileContents: String = Source.fromFile("config.json").getLines.mkString
     val configurations: SmackConfiguration = parse(fileContents).extract[SmackConfiguration]
 
-    val mesos = MesosCluster(
+    val mesos = MesosCluster(configurations.clusterName,
                               configurations.masters
-                                .map(s => Node(s, configurations.user, configurations.password))
-                                .head,
+                                .map(s => Node(s, configurations.user, configurations.password)),
                               configurations.agents
                                 .map(s => Node(s, configurations.user, configurations.password))
                             )
 
-    /*configurations.masters.map(s =>Node(s, configurations.user, configurations.password))
-      .foreach(n => {
-        n.executeScript(Scripts.START_MULTIPLE_MASTER, configurations.masters: _*)
-      })*/
 
-    configurations.agents.map(s =>Node(s, configurations.user, configurations.password))
-      .foreach(n => {
-        //n.executeScript(Scripts.INSTALL_AGENT)
-        n.executeScript(Scripts.START_AGENT_MULTIPLE, configurations.masters: _*)
-      })
 
-    //mesos.createCluster()
+    mesos.createCluster()
     //SPARK
     //start spark framework
     /*mesos.getMaster.executeCommand("./spark-2.3.1-bin-hadoop2.7/sbin/spark-daemon.sh " +

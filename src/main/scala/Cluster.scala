@@ -3,6 +3,8 @@
 
 trait Cluster {
 
+  val clusterName: String
+
   def createCluster()
 
   def shutdownCluster()
@@ -11,7 +13,7 @@ trait Cluster {
 
   def removeAgent(node: Node)
 
-  def getMaster: Node
+  def getMasters: List[Node]
 
   def getAgents: List[Node]
 
