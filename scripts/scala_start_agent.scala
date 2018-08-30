@@ -15,12 +15,12 @@ object Main extends App {
       writer.write(stringToWrite)
     } finally writer.close()
   }
-
   def ipAddress(): String = {
     val whatismyip = new URL("http://checkip.amazonaws.com")
     val in: BufferedReader = new BufferedReader(new InputStreamReader(whatismyip.openStream()))
     in.readLine()
   }
+
   "sudo service mesos-master stop" !
 
   "sudo service mesos-slave stop" !

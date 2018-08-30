@@ -1,14 +1,20 @@
+package cluster
+
 import java.io.{BufferedReader, File, InputStreamReader}
 import java.nio.file.{Files, Paths}
 
 import ch.ethz.ssh2.{Connection, SCPClient, StreamGobbler}
 
-object Node {
-  def apply(ip: String, usr: String, psw: String) = new Node(ip, usr, psw)
+object Machine {
+  def apply(ip: String, usr: String, keyPath: String, keyPsw: String) = {
+    new Machine(ip, usr, keyPath, keyPsw)
+  }
+
 }
 
-case class Node(ip: String, usr: String, psw: String) {
+case class Machine(ip: String, usr: String, keyPath: String, keyPsw: String) {
 
+  lazy val keyFile = new File(keyPath)
   def getIp: String = this.ip
 
 
@@ -16,7 +22,9 @@ case class Node(ip: String, usr: String, psw: String) {
     val scriptFile = new File(script.getPath)
     val conn = new Connection(this.getIp)
     conn.connect()
-    conn.authenticateWithPassword(this.usr, this.psw)
+    conn.authenticateWithPublicKey(usr, keyFile, keyPsw)
+
+    //conn.authenticateWithPassword(this.usr, this.psw)
     val scp = new SCPClient(conn)
     val ouputStream = scp.put(scriptFile.getName, scriptFile.length, ".", "7777")
     ouputStream.write(Files.readAllBytes(Paths.get(script.getPath)))
@@ -31,7 +39,9 @@ case class Node(ip: String, usr: String, psw: String) {
     //Start connection
     val conn = new Connection(this.getIp)
     conn.connect
-    conn.authenticateWithPassword(usr, psw)
+    conn.authenticateWithPublicKey(usr, keyFile, keyPsw)
+
+    //conn.authenticateWithPassword(usr, psw)
     //Start execution session
     val sess = conn.openSession
     //Execute command

@@ -1,14 +1,17 @@
 {
   "clusterName": "TestCluster",
   "user": "root",
-  "password": "password",
+  "sshKeyPath": "private_key_openssh",
+  "sshKeyPassword": "",
   "masters": [
-    "178.128.198.254",
-    "142.93.169.236",
-    "178.128.207.160"
+    "46.101.233.10",
+    "138.68.70.113",
+    "207.154.230.187"
   ],
   "agents": [
-    "178.128.196.49"
+    "46.101.188.13",
+    "46.101.115.201",
+    "207.154.225.224"
   ],
   "cassandraInstances": 1,
   "kafkaInstances": 1

@@ -22,6 +22,11 @@ object Main extends App {
     in.readLine()
   }
 
+  "sudo service mesos-master stop" !
+
+  "sudo service mesos-slave stop" !
+
+
   val clusterName: String = args(0)
   val masters: Array[String] = args.drop(1)
   val myIp: String = ipAddress()
@@ -50,8 +55,6 @@ object Main extends App {
   writeToFile("/etc/mesos-master/cluster", s"$clusterName\n", append = false)
   println(s"Starting mesos master on $myIp")
 
-
-  "sudo service mesos-slave stop" !
 
   "sudo service zookeeper restart" !
 
