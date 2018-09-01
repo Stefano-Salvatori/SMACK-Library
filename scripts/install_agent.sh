@@ -3,11 +3,13 @@ export DEBIAN_FRONTEND=noninteractive
 #setup spark
 sudo mkdir -p /tmp/spark-events
 
-#install java
+#install java and scala
 echo "Installing Java..."
 sudo apt-get update
 sudo apt-get install default-jdk -y
-sudo apt-get install scala -y
+sudo apt-get remove scala-library scala -y
+sudo wget http://scala-lang.org/files/archive/scala-2.12.4.deb
+sudo dpkg -i scala-2.12.4.deb -y
 
 #install mesos
 #mesos, zookeeper

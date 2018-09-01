@@ -44,8 +44,6 @@ object Main extends App {
 
   "sudo service mesos-slave start" !
 
-  //_______________
-
 }
 
 Main.main(args)

@@ -7,13 +7,6 @@ object KafkaTask {
   object KafkaVariable extends Enumeration {
     type KafkaVariable = Value
 
-    /**
-      * DEPRECATED: only used when `advertised.listeners` or `listeners` are not set. Use
-      * `advertised.listeners` instead. Hostname to publish to ZooKeeper for clients to use. In
-      * IaaS environments, this may need to be different from the interface to which the broker
-      * binds. If this is not set, it will use the value for `host.name` if configured.
-      * Otherwise it will use the value returned from java.net.InetAddress.getCanonicalHostName().
-      */
     val HOSTNAME_COMMAND = Value("HOSTNAME_COMMAND") //"ip route get 8.8.8.8 | awk '{print; exit}'",
 
     /**

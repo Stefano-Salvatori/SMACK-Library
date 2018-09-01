@@ -28,7 +28,7 @@ class TaskSerializer extends Serializer[GenericTask] {
                JField("cpus", JDouble(x.cpus)),
                JField("mem", JDouble(x.mem)),
                JField("disk", JDouble(x.disk)),
-               JField("cmd", JString(x.cmd.getOrElse(""))),
+               JField("cmd", JString(x.cmd.orNull)),
                JField("container", decompose(x.container)),
                JField("env", decompose(x.env)),
                JField("instances", JInt(x.instances)))

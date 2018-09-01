@@ -1,6 +1,5 @@
 package task
 
-import task.CassandraTask.CassandraVariable
 import task.CassandraTask.CassandraVariable.CassandraVariable
 
 object CassandraTask {
@@ -75,18 +74,18 @@ object CassandraTask {
       * endpoint_snitch option of cassandra.yml.
       */
     val CASSANDRA_ENDPOINT_SNITCH = Value("CASSANDRA_ENDPOINT_SNITCH")
-
-    def isEnvVariable(s: String) = values.exists(_.toString == s)
   }
 
 }
 
 class CassandraTask(id: String, cpus: Double, mem: Double, disk: Double, cmd: Option[String])
-  extends GenericTask(id, cpus = cpus, mem, disk, cmd, Some(Container(docker = Some(DockerContainer("cassandra:latest",
-                                                                                                                                           "HOST",
-                                                                                                                                           forcePullImage = true,
-                                                                                                                                           privileged = true,
-                                                                                                                                           Array(7199, 7000, 7001, 9160, 9042))))), Map()) {
+  extends GenericTask(id, cpus, mem, disk, cmd,
+                       Some(Container(docker = Some(DockerContainer("cassandra:latest",
+                                                                     "HOST",
+                                                                     forcePullImage = true,
+                                                                     privileged = true,
+                                                                     Array(7199, 7000, 7001, 9160, 9042))))),
+                       Map()) {
 
   def set(name: CassandraVariable, value: String) = {
     super.setEnvVariable(name.toString, value)

@@ -1,6 +1,5 @@
 package cluster
 
-
 import net.liftweb.json.DefaultFormats
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
 import task.MarathonTask
@@ -8,58 +7,103 @@ import task.MarathonTask
 import scala.sys.process._
 
 object MesosCluster {
-  private val DEFAULT_NAME: String = "Mesos cluster.Cluster"
+  private val DEFAULT_NAME: String = "Mesos-Cluster"
 
-  def apply(clusterName: String, masters: List[Machine], agents: List[Machine])
-  : MesosCluster = {
+  def apply(name: String,
+            agents: List[String],
+            masters: List[String],
+            user: String,
+            sshKeyPath: String,
+            sshKeyPassword: String): MesosCluster = {
+
+    new MesosClusterBuilder()
+      .setClusterName(name)
+      .setAgents(agents)
+      .setMasters(masters)
+      .setConnection(user, sshKeyPath, sshKeyPassword)
+      .build()
+
+  }
+
+  def apply(config: ClusterConfigurations): MesosCluster = {
+    val agentNodes = config.agents.map(a => Node(a, config.user, config.sshKeyPath, config.sshKeyPassword))
+    val masterNodes = config.masters.map(m => Node(m, config.user, config.sshKeyPath, config.sshKeyPassword))
+    new MesosCluster(config.clusterName, masterNodes, agentNodes)
+  }
+
+  /*def apply(clusterName: String, masters: List[Node], agents: List[Node]): MesosCluster = {
     new MesosCluster(clusterName, masters, agents)
   }
 
-  def apply(masters: List[Machine], agents: List[Machine]): MesosCluster = {
+  def apply(masters: List[Node], agents: List[Node]): MesosCluster = {
     new MesosCluster(DEFAULT_NAME, masters, agents)
   }
 
-  def apply(masters: List[Machine]): MesosCluster = {
+  def apply(masters: List[Node]): MesosCluster = {
     new MesosCluster(DEFAULT_NAME, masters, List())
   }
+
+  def apply(): MesosCluster = {
+    new MesosCluster("", List(), List())
+  }*/
 
 
 }
 
-case class MesosCluster(clusterName: String, masters: List[Machine], var agents: List[Machine])
+case class MesosCluster(clusterName: String,
+                        masters: List[Node],
+                        var agents: List[Node])
   extends Cluster {
-  implicit val formats: DefaultFormats.type = DefaultFormats
 
+
+  implicit val formats: DefaultFormats.type = DefaultFormats
   private lazy val curlCmd = System.getProperty("os.name") match {
     case s if s.startsWith("Windows") => "curl.exe"
     case _ => "curl"
   }
   private lazy val zkConnectionString = s"zk://${masters.map(_.getIp.concat(":2181")).mkString(",")}"
 
-  /**
-    * Install the required software on each machine of the cluster.
-    */
-  private def installComponents(): Unit = {
-    masters.foreach(_.executeScript(Scripts.INSTALL_MASTER))
-    agents.foreach(_.executeScript(Scripts.INSTALL_AGENT))
+  def getZkConnectionString: String = this.zkConnectionString
+
+  def setHostnames(): Unit = {
+    val all = masters ::: agents
+    val args = all.map(n => s"${n.getIp} ${n.getHostname}").mkString(" ")
+    all.foreach(node => {
+      node.executeScript(Scripts.SET_HOSTS, printResult = true, args)
+    })
   }
 
   /**
-    * Start mesos masters , mesos agents and marathon framework to allow launching
-    * applications over the cluster.
+    * Install the required software on each node of the cluster.
+    */
+  private def installComponents(): Unit = {
+    masters.foreach(_.executeScript(Scripts.INSTALL_MASTER, printResult = true))
+    agents.foreach(_.executeScript(Scripts.INSTALL_AGENT, printResult = true))
+  }
+
+  /**
+    * Start mesos masters and mesos agents
     **/
   private def startCluster(): Unit = {
     masters.foreach(m =>
-      m.executeScript(Scripts.START_MULTIPLE_MASTER, clusterName :: masters.map(_.getIp): _*))
-    agents.foreach(a => a.executeScript(Scripts.START_AGENT_MULTIPLE, masters.map(_.getIp): _*))
-  }
-
-  def startMarathon(): Unit = {
-    masters.foreach(m => m.executeScript(Scripts.START_MARATHON, masters.map(_.getIp): _*))
+      m.executeScript(Scripts.START_MULTIPLE_MASTER, printResult = true, clusterName :: masters
+        .map(_.getIp): _*))
+    agents.foreach(a => a.executeScript(Scripts.START_AGENT_MULTIPLE, printResult = true, masters
+      .map(_.getIp): _*))
   }
 
   /**
-    * Create and run the mesos cluster; Automatically starts Marathon framework to allow launching
+    * Start marathon framework to allow launching
+    * applications over the cluster.
+    */
+  private def startMarathon(): Unit = {
+    masters.foreach(m => m.executeScript(Scripts.START_MARATHON, printResult = true, masters.map(_
+      .getIp): _*))
+  }
+
+  /**
+    * Create and run the mesos cluster; install all the required software in mastes
+    * and agents nodes; automatically starts Marathon framework to allow launching
     * applications(commands, docker images...) over the cluster
     */
   def createCluster(): Unit = {
@@ -84,21 +128,22 @@ case class MesosCluster(clusterName: String, masters: List[Machine], var agents:
     //println(prettyRender(parse(response)))
   }
 
-  def getAgents: List[Machine] = this.agents
+  def getAgents: List[Node] = this.agents
 
-  def getMasters: List[Machine] = this.masters
+  def getMasters: List[Node] = this.masters
 
   /**
     * Add an agent to the cluster
     *
-    * @param machine
+    * @param node
     * the agent to add
     */
-  override def addAgent(machine: Machine) = {
+  override def addAgent(node: Node) = {
     println("Adding agent to the cluster")
-    machine.executeScript(Scripts.INSTALL_AGENT)
-    machine.executeScript(Scripts.START_AGENT_MULTIPLE, masters.map(_.getIp): _*)
-    machine :: this.agents
+    node.executeScript(Scripts.INSTALL_AGENT, printResult = true)
+    this.setHostnames()
+    node.executeScript(Scripts.START_AGENT_MULTIPLE, printResult = true, masters.map(_.getIp): _*)
+    this.agents = node :: this.agents
   }
 
   override def shutdownCluster() = {
@@ -111,8 +156,8 @@ case class MesosCluster(clusterName: String, masters: List[Machine], var agents:
     * @param agent
     * the agent to remove
     */
-  def removeAgent(agent: Machine) = {
-    if(this.agents.contains(agent))
+  def removeAgent(agent: Node) = {
+    if (this.agents.contains(agent))
       this.removeAgent(agent.getIp)
     else println("Cannot find the agent in input")
   }

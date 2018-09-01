@@ -26,7 +26,6 @@ object Main extends App {
 
   "sudo service mesos-slave stop" !
 
-
   val clusterName: String = args(0)
   val masters: Array[String] = args.drop(1)
   val myIp: String = ipAddress()

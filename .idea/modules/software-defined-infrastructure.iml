@@ -13,21 +13,21 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.12.4:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.slf4j:slf4j-api:1.7.25:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-parser-combinators_2.12:1.0.4:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.joda:joda-convert:2.1:jar" level="project" />
-    <orderEntry type="library" name="sbt: net.liftweb:lift-json-ext_2.12:3.3.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: net.liftweb:lift-common_2.12:3.3.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: joda-time:joda-time:2.10:jar" level="project" />
-    <orderEntry type="library" name="sbt: commons-codec:commons-codec:1.11:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.jvnet.hudson:ganymed-ssh-2:build260:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-xml_2.12:1.0.6:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-parser-combinators_2.12:1.0.4:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang:scalap:2.12.4:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.12.4:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.12.4:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang:scala-compiler:2.12.4:jar" level="project" />
     <orderEntry type="library" name="sbt: net.liftweb:lift-json_2.12:3.3.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: com.thoughtworks.paranamer:paranamer:2.8:jar" level="project" />
+    <orderEntry type="library" name="sbt: net.liftweb:lift-json-ext_2.12:3.3.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: net.liftweb:lift-common_2.12:3.3.0:jar" level="project" />
     <orderEntry type="library" name="sbt: com.lihaoyi:ujson_2.12:0.6.6:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.jvnet.hudson:ganymed-ssh-2:build260:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.slf4j:slf4j-api:1.7.25:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.joda:joda-convert:2.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: joda-time:joda-time:2.10:jar" level="project" />
+    <orderEntry type="library" name="sbt: commons-codec:commons-codec:1.11:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.thoughtworks.paranamer:paranamer:2.8:jar" level="project" />
   </component>
 </module>

@@ -1,6 +1,6 @@
 package task
 
-import java.io.{BufferedWriter, File, FileReader, FileWriter}
+import java.io.{BufferedWriter, File, FileWriter}
 
 import net.liftweb.json.Serialization
 import net.liftweb.json.ext.EnumNameSerializer

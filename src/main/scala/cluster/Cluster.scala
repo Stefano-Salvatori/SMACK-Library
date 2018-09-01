@@ -8,12 +8,12 @@ trait Cluster {
 
   def shutdownCluster()
 
-  def addAgent(node: Machine)
+  def addAgent(node: Node)
 
-  def removeAgent(node: Machine)
+  def removeAgent(node: Node)
 
-  def getMasters: List[Machine]
+  def getMasters: List[Node]
 
-  def getAgents: List[Machine]
+  def getAgents: List[Node]
 
 }

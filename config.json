@@ -1,18 +1,13 @@
 {
-  "clusterName": "TestCluster",
+  "clusterName": "Mesos-Cluster",
   "user": "root",
   "sshKeyPath": "private_key_openssh",
   "sshKeyPassword": "",
   "masters": [
-    "46.101.233.10",
-    "138.68.70.113",
-    "207.154.230.187"
+    "142.93.107.161"
   ],
   "agents": [
-    "46.101.188.13",
-    "46.101.115.201",
-    "207.154.225.224"
-  ],
-  "cassandraInstances": 1,
-  "kafkaInstances": 1
+    "142.93.107.164",
+    "142.93.107.179"
+  ]
 }
