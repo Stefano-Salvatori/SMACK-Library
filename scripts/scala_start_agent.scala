@@ -25,7 +25,7 @@ object Main extends App {
 
   "sudo service mesos-slave stop" !
 
-  //sudo mkdir -p /tmp/spark-events
+  "sudo mkdir -p /tmp/spark-events" !
   val myIp =ipAddress()
   val masters = args
   //sudo hostname $my_ip
@@ -33,12 +33,20 @@ object Main extends App {
   var zkString = "zk://"
   zkString = zkString.concat(masters.map(ip => ip.concat(":2181")).mkString(","))
   zkString = zkString.concat("/mesos")
+
+  //Setup Spark env
+  writeToFile("/root/spark-2.3.1-bin-hadoop2.7/conf/spark-env.sh",
+               s"SPARK_LOCAL_IP=$myIp",
+               append = true)
+  "chmod +x /root/spark-2.3.1-bin-hadoop2.7/conf/spark-env.sh" !
+
+
   writeToFile("/etc/mesos/zk", s"$zkString\n", append = false)
 
   writeToFile("/etc/mesos-slave/ip", s"$myIp\n", append = false)
   writeToFile("/etc/mesos-slave/hostname", s"$myIp\n", append = false)
-  writeToFile("/etc/mesos-slave/containerizers", "docker,mesos", append = false)
-  writeToFile("/etc/mesos-slave/executor_registration_timeout", "10mins", append = false)
+  writeToFile("/etc/mesos-slave/containerizers", "docker,mesos\n", append = false)
+  writeToFile("/etc/mesos-slave/executor_registration_timeout", "10mins\n", append = false)
   new File("/var/lib/mesos/meta/slaves/latest").delete()
   println(s"Starting mesos agent on $myIp")
 

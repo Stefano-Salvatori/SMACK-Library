@@ -56,9 +56,11 @@ class MesosClusterBuilder() {
     this
   }
 
-  def build() = MesosCluster(this.name,
-                              this.masters.map(m => Node(m, user, sshKeyPath, sshKeyPassword)),
-                              this.agents.map(a => Node(a, user, sshKeyPath, sshKeyPassword)))
+  def build(): MesosCluster = new MesosCluster(this.name,
+                                                this.masters.map(m => new Node(m, user, sshKeyPath,
+                                                                                sshKeyPassword)),
+                                                this.agents.map(a => new Node(a, user, sshKeyPath,
+                                                                               sshKeyPassword)))
 
 
 }

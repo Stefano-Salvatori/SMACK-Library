@@ -32,19 +32,28 @@ object Main extends App {
   var zkString: String = "zk://"
   zkString = zkString.concat(masters.map(ip => ip.concat(":2181")).mkString(","))
   zkString = zkString.concat("/mesos")
+
+
+  //Setup Spark env
+  writeToFile("/root/spark-2.3.1-bin-hadoop2.7/conf/spark-env.sh",
+               s"SPARK_LOCAL_IP=$myIp",
+               append = true)
+
+  "chmod +x /root/spark-2.3.1-bin-hadoop2.7/conf/spark-env.sh" !
+
+ //Setup Zookeeper
   println(s"zkString: $zkString")
   writeToFile("/etc/mesos/zk", zkString, append = false)
-
   var zkServerString: String = ""
   masters.foreach(ip =>
     zkServerString = zkServerString.concat(s"server.${masters.indexOf(ip) + 1}=$ip:2888:3888\n"))
   println(s"zk server: $zkServerString")
   writeToFile("/etc/zookeeper/conf/zoo.cfg", zkServerString, append = true)
-
   val myId = masters.indexOf(myIp) + 1
   println(s"id: $myId")
   writeToFile("/etc/zookeeper/conf/myid", s"$myId\n", append = false)
 
+  //Setup Mesos
   val quorum: Int = masters.length / 2 + 1
   println(s"quorum: $quorum")
   //writeToFile("/etc/default/mesos-master", s"MESOS_QUORUM=$quorum\n", append = true)

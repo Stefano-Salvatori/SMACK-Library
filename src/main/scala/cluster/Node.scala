@@ -3,24 +3,41 @@ package cluster
 import java.io.{BufferedReader, File, InputStreamReader}
 import java.nio.file.{Files, Paths}
 
+import ch.ethz.ssh2.log.Logger
 import ch.ethz.ssh2.{Connection, SCPClient, StreamGobbler}
 
 object Node {
-  def apply(ip: String, usr: String, keyPath: String, keyPsw: String) = {
-    new Node(ip, usr, keyPath, keyPsw)
-  }
 
 }
 
-case class Node(ip: String, usr: String, keyPath: String, keyPsw: String) {
+case class Node(private val ip: String,
+                private val usr: String,
+                private val keyPath: String,
+                private val keyPsw: String) {
 
   this.checkValidIp(ip)
   lazy val keyFile = new File(keyPath)
-  private val hostname: String = null
+  private var hostname: String = _
 
 
   def getIp: String = this.ip
 
+  /**
+    * Execute a script on this Machine.
+    * (This function sends the script file via scp then execute it by calling the
+    * [[cluster.Node#executeCommand]]("./script_name"); finally delete the file with
+    * executeCommand("rm ./script_name")
+    *
+    * @param script
+    * the script to execute. The only available scripts are the ones listed in
+    * [[cluster.Scripts]]
+    * @param printResult
+    * whether or not to print the result of the script on the console
+    * @param params
+    * the param to pass as arguments of the script
+    * @return
+    * the result string
+    */
   def executeScript(script: Scripts, printResult: Boolean, params: String*) = {
     val scriptFile = new File(script.getPath)
     val conn = new Connection(this.getIp)
@@ -60,21 +77,22 @@ case class Node(ip: String, usr: String, keyPath: String, keyPsw: String) {
     val stdout = new StreamGobbler(sess.getStdout)
     val br = new BufferedReader(new InputStreamReader(stdout))
     var line: String = ""
-    val result: String = ""
+    var result: String = ""
     do {
       if (printResult) println(line)
-      result.concat(line)
+      result = result.concat(line)
       line = br.readLine()
     } while (line != null)
     //Close connection
     sess.close()
     conn.close()
-    line
+    result
   }
 
   def getHostname: String = {
     if (this.hostname == null) {
-      this.executeCommand("hostname", printResult = false)
+      this.hostname = this.executeCommand("hostname", printResult = false)
+      this.hostname
     } else {
       this.hostname
     }

@@ -18,7 +18,7 @@ object Main extends App {
     "ff00::0 ip6-mcastprefix\n" +
     "ff02::1 ip6-allnodes\n" +
     "ff02::2 ip6-allrouters\n" +
-    "ff02::3 ip6-allhosts"
+    "ff02::3 ip6-allhosts\n"
 
   def writeToFile(filePath: String, stringToWrite: String, append: Boolean): Unit = {
     val writer = new PrintWriter(new FileOutputStream(filePath, append))
@@ -37,7 +37,9 @@ object Main extends App {
 
   val myIp = ipAddress()
   writeToFile("/etc/hosts", DEFAULT_HOST_FILE, append = false)
+  println(s"Updating hosts on $myIp")
   for (Array(ip, host) <- args.grouped(2)) {
+    println(s"\t $ip $host")
     writeToFile("/etc/hosts", s"\n$ip $host", append = true)
   }
 

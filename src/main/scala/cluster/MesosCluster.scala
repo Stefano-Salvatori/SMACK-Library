@@ -1,58 +1,35 @@
 package cluster
 
-import net.liftweb.json.DefaultFormats
+import java.io.{BufferedWriter, File, FileWriter}
+
+import net.liftweb.json.{DefaultFormats, parse}
+import net.liftweb.json.prettyRender
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
 import task.MarathonTask
 
+import scala.io.Source
 import scala.sys.process._
 
 object MesosCluster {
   private val DEFAULT_NAME: String = "Mesos-Cluster"
 
-  def apply(name: String,
-            agents: List[String],
-            masters: List[String],
-            user: String,
-            sshKeyPath: String,
-            sshKeyPassword: String): MesosCluster = {
-
+  def fromJson(jsonPath: String): MesosCluster = {
+    implicit val formats = net.liftweb.json.DefaultFormats
+    val fileContents: String = Source.fromFile(jsonPath).getLines.mkString
+    val config: ClusterConfigurations = parse(fileContents).extract[ClusterConfigurations]
     new MesosClusterBuilder()
-      .setClusterName(name)
-      .setAgents(agents)
-      .setMasters(masters)
-      .setConnection(user, sshKeyPath, sshKeyPassword)
+      .setClusterName(config.clusterName)
+      .setMasters(config.masters)
+      .setAgents(config.agents)
+      .setConnection(config.user, config.sshKeyPath, config.sshKeyPassword)
       .build()
-
   }
-
-  def apply(config: ClusterConfigurations): MesosCluster = {
-    val agentNodes = config.agents.map(a => Node(a, config.user, config.sshKeyPath, config.sshKeyPassword))
-    val masterNodes = config.masters.map(m => Node(m, config.user, config.sshKeyPath, config.sshKeyPassword))
-    new MesosCluster(config.clusterName, masterNodes, agentNodes)
-  }
-
-  /*def apply(clusterName: String, masters: List[Node], agents: List[Node]): MesosCluster = {
-    new MesosCluster(clusterName, masters, agents)
-  }
-
-  def apply(masters: List[Node], agents: List[Node]): MesosCluster = {
-    new MesosCluster(DEFAULT_NAME, masters, agents)
-  }
-
-  def apply(masters: List[Node]): MesosCluster = {
-    new MesosCluster(DEFAULT_NAME, masters, List())
-  }
-
-  def apply(): MesosCluster = {
-    new MesosCluster("", List(), List())
-  }*/
-
 
 }
 
-case class MesosCluster(clusterName: String,
-                        masters: List[Node],
-                        var agents: List[Node])
+class MesosCluster(val clusterName: String,
+                   val masters: List[Node],
+                   var agents: List[Node])
   extends Cluster {
 
 
@@ -65,41 +42,11 @@ case class MesosCluster(clusterName: String,
 
   def getZkConnectionString: String = this.zkConnectionString
 
-  def setHostnames(): Unit = {
-    val all = masters ::: agents
-    val args = all.map(n => s"${n.getIp} ${n.getHostname}").mkString(" ")
-    all.foreach(node => {
-      node.executeScript(Scripts.SET_HOSTS, printResult = true, args)
-    })
-  }
+  override def getClusterName = this.clusterName
 
-  /**
-    * Install the required software on each node of the cluster.
-    */
-  private def installComponents(): Unit = {
-    masters.foreach(_.executeScript(Scripts.INSTALL_MASTER, printResult = true))
-    agents.foreach(_.executeScript(Scripts.INSTALL_AGENT, printResult = true))
-  }
+  def getAgents: List[Node] = this.agents
 
-  /**
-    * Start mesos masters and mesos agents
-    **/
-  private def startCluster(): Unit = {
-    masters.foreach(m =>
-      m.executeScript(Scripts.START_MULTIPLE_MASTER, printResult = true, clusterName :: masters
-        .map(_.getIp): _*))
-    agents.foreach(a => a.executeScript(Scripts.START_AGENT_MULTIPLE, printResult = true, masters
-      .map(_.getIp): _*))
-  }
-
-  /**
-    * Start marathon framework to allow launching
-    * applications over the cluster.
-    */
-  private def startMarathon(): Unit = {
-    masters.foreach(m => m.executeScript(Scripts.START_MARATHON, printResult = true, masters.map(_
-      .getIp): _*))
-  }
+  def getMasters: List[Node] = this.masters
 
   /**
     * Create and run the mesos cluster; install all the required software in mastes
@@ -108,9 +55,11 @@ case class MesosCluster(clusterName: String,
     */
   def createCluster(): Unit = {
     this.installComponents()
+    this.setHostnames()
     this.startCluster()
     this.startMarathon()
   }
+
 
   /**
     * Run an app on the cluster.
@@ -124,13 +73,9 @@ case class MesosCluster(clusterName: String,
       s"${masters.head.getIp}:8080/v2/apps " +
       s"-d@${marathonTask.id}.json") !!
 
-    //val bw = new BufferedWriter(new FileWriter(new File(s"response.json")))
-    //println(prettyRender(parse(response)))
+    new File(s"${marathonTask.id}.json").delete()
+    println(prettyRender(parse(response)))
   }
-
-  def getAgents: List[Node] = this.agents
-
-  def getMasters: List[Node] = this.masters
 
   /**
     * Add an agent to the cluster
@@ -141,9 +86,9 @@ case class MesosCluster(clusterName: String,
   override def addAgent(node: Node) = {
     println("Adding agent to the cluster")
     node.executeScript(Scripts.INSTALL_AGENT, printResult = true)
+    this.agents = node :: this.agents
     this.setHostnames()
     node.executeScript(Scripts.START_AGENT_MULTIPLE, printResult = true, masters.map(_.getIp): _*)
-    this.agents = node :: this.agents
   }
 
   override def shutdownCluster() = {
@@ -177,4 +122,40 @@ case class MesosCluster(clusterName: String,
     }
 
   }
+
+  def setHostnames(): Unit = {
+    val all = masters ::: agents
+    all.foreach(node => {
+      val args = all.filter(_ != node).map(n => s"${n.getIp} ${n.getHostname}").mkString(" ")
+      node.executeScript(Scripts.SET_HOSTS, printResult = true, args)
+    })
+  }
+
+  /**
+    * Install the required software on each node of the cluster.
+    */
+  private def installComponents(): Unit = {
+    masters.foreach(_.executeScript(Scripts.INSTALL_MASTER, printResult = true))
+    agents.foreach(_.executeScript(Scripts.INSTALL_AGENT, printResult = true))
+  }
+
+  /**
+    * Start mesos masters and mesos agents
+    **/
+  def startCluster(): Unit = {
+    masters.foreach(m => m.executeScript(Scripts.START_MULTIPLE_MASTER, printResult = true,
+                                          clusterName :: masters.map(_.getIp): _*))
+    agents.foreach(a => a.executeScript(Scripts.START_AGENT_MULTIPLE, printResult = true,
+                                         masters.map(_.getIp): _*))
+  }
+
+  /**
+    * Start marathon framework to allow launching
+    * applications over the cluster.
+    */
+  private def startMarathon(): Unit = {
+    masters.foreach(m =>
+      m.executeScript(Scripts.START_MARATHON, printResult = true, masters.map(_.getIp): _*))
+  }
+
 }

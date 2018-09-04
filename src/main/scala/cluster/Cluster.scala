@@ -2,7 +2,7 @@ package cluster
 
 trait Cluster {
 
-  val clusterName: String
+  def getClusterName: String
 
   def createCluster()
 

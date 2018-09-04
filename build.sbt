@@ -2,7 +2,7 @@ name := "Software-Defined-Infrastructure"
 
 version := "0.1"
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.11.12"
 
 libraryDependencies += "com.lihaoyi" %% "ujson" % "0.6.6"
 //Uncomment to enable logging

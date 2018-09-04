@@ -23,4 +23,6 @@ class GenericTask(var id: String,
                   val container: Option[Container],
                   var env: Map[String, String],
                   var instances: Int = 1) extends MarathonTask {
+
+  this.id = id.toLowerCase
 }

@@ -67,8 +67,11 @@ class KafkaTask(id: String,
                                                                                           "HOST",
                                                                                           forcePullImage = true,
                                                                                           privileged = true,
-                                                                                          Array()
-                                                                                       )))),Map()) {
+                                                                                         Array
+                                                                                         (9094,
+                                                                                           9092,
+                                                                                           2181)))
+                                                         )),Map()) {
 
 
   def set(name: KafkaVariable, value: String) = {
