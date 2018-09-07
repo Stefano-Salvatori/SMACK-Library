@@ -1,6 +1,6 @@
 package task
 
-import java.io.{BufferedWriter, File, FileWriter}
+import java.io._
 
 import net.liftweb.json.Serialization
 import net.liftweb.json.ext.EnumNameSerializer
@@ -29,14 +29,13 @@ trait MarathonTask {
   }
 
   def saveAsJson(): Unit = {
-    implicit val formats = net.liftweb.json.DefaultFormats +
-      new EnumNameSerializer(ContainerType) +
-      new TaskSerializer()
+    implicit val formats = net.liftweb.json.DefaultFormats + new TaskSerializer()
     val bw = new BufferedWriter(new FileWriter(new File(s"$id.json")))
     val w = Serialization.writePretty(this)
     bw.write(w)
     bw.close()
   }
+
 
 
 }

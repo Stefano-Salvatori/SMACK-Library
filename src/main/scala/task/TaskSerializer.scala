@@ -2,7 +2,9 @@ package task
 
 import net.liftweb.json._
 
-
+/**
+  * This class is used to save task as json files.
+  */
 class TaskSerializer extends Serializer[GenericTask] {
   private val Class = classOf[GenericTask]
 

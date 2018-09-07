@@ -48,8 +48,7 @@ class MesosClusterBuilder() {
     * @param sshKeyPath     the path to the ssh key
     * @param sshKeyPassword the password for the given key
     */
-  def setConnection(user: String, sshKeyPath: String, sshKeyPassword: String)
-  : MesosClusterBuilder = {
+  def setConnection(user: String, sshKeyPath: String, sshKeyPassword: String): MesosClusterBuilder = {
     this.user = user
     this.sshKeyPath = sshKeyPath
     this.sshKeyPassword = sshKeyPassword

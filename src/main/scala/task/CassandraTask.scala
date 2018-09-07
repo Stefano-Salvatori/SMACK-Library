@@ -1,8 +1,13 @@
 package task
 
 import task.CassandraTask.CassandraVariable.CassandraVariable
+import Container._
 
 object CassandraTask {
+
+  val CASSANDRA_CONTAINER =
+    Container("DOCKER", DockerContainer("cassandra:latest", "HOST", true, true, Array(7199, 7000,
+                                                                                       7001, 9160, 9042)))
 
   object CassandraVariable extends Enumeration {
     type CassandraVariable = Value
@@ -78,14 +83,9 @@ object CassandraTask {
 
 }
 
-class CassandraTask(id: String, cpus: Double, mem: Double, disk: Double, cmd: Option[String])
-  extends GenericTask(id, cpus, mem, disk, cmd,
-                       Some(Container(docker = Some(DockerContainer("cassandra:latest",
-                                                                     "HOST",
-                                                                     forcePullImage = true,
-                                                                     privileged = true,
-                                                                     Array(7199, 7000, 7001, 9160, 9042))))),
-                       Map()) {
+class CassandraTask(id: String, cpus: Double, mem: Double, disk: Double,
+                    cmd: Option[String])
+  extends GenericTask(id, cpus, mem, disk, cmd, CassandraTask.CASSANDRA_CONTAINER, Map()) {
 
   def set(name: CassandraVariable, value: String) = {
     super.setEnvVariable(name.toString, value)

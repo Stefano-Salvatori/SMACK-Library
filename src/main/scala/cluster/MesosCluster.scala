@@ -1,9 +1,6 @@
 package cluster
 
-import java.io.{BufferedWriter, File, FileWriter}
-
-import net.liftweb.json.{DefaultFormats, parse}
-import net.liftweb.json.prettyRender
+import net.liftweb.json.{DefaultFormats, parse, prettyRender}
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
 import task.MarathonTask
 
@@ -11,6 +8,13 @@ import scala.io.Source
 import scala.sys.process._
 
 object MesosCluster {
+  case class ClusterConfigurations(clusterName: String,
+                                   user: String,
+                                   sshKeyPath: String,
+                                   sshKeyPassword: String,
+                                   masters: List[String],
+                                   agents: List[String])
+
   private val DEFAULT_NAME: String = "Mesos-Cluster"
 
   def fromJson(jsonPath: String): MesosCluster = {
@@ -27,29 +31,30 @@ object MesosCluster {
 
 }
 
-class MesosCluster(val clusterName: String,
-                   val masters: List[Node],
-                   var agents: List[Node])
+/**
+  *
+  * @param clusterName
+  *                    'Symbolic' name of the cluster
+  * @param masters
+  *                List of nodes that will become masters
+  * @param agents
+  *               List of nodes that wil become agents
+  */
+class MesosCluster(val clusterName: String, val masters: List[Node], var agents: List[Node])
   extends Cluster {
 
-
-  implicit val formats: DefaultFormats.type = DefaultFormats
+  if (clusterName.contains(" ")) throw new IllegalArgumentException("Invalid cluster name")
+  private implicit val formats: DefaultFormats.type = DefaultFormats
   private lazy val curlCmd = System.getProperty("os.name") match {
     case s if s.startsWith("Windows") => "curl.exe"
     case _ => "curl"
   }
-  private lazy val zkConnectionString = s"zk://${masters.map(_.getIp.concat(":2181")).mkString(",")}"
 
-  def getZkConnectionString: String = this.zkConnectionString
 
-  override def getClusterName = this.clusterName
-
-  def getAgents: List[Node] = this.agents
-
-  def getMasters: List[Node] = this.masters
+  def zkConnectionString: String = s"zk://${masters.map(_.getIp.concat(":2181")).mkString(",")}"
 
   /**
-    * Create and run the mesos cluster; install all the required software in mastes
+    * Create and run the mesos cluster; install all the required software in masters
     * and agents nodes; automatically starts Marathon framework to allow launching
     * applications(commands, docker images...) over the cluster
     */
@@ -73,7 +78,7 @@ class MesosCluster(val clusterName: String,
       s"${masters.head.getIp}:8080/v2/apps " +
       s"-d@${marathonTask.id}.json") !!
 
-    new File(s"${marathonTask.id}.json").delete()
+    //new File(s"${marathonTask.id}.json").delete()
     println(prettyRender(parse(response)))
   }
 
@@ -88,8 +93,9 @@ class MesosCluster(val clusterName: String,
     node.executeScript(Scripts.INSTALL_AGENT, printResult = true)
     this.agents = node :: this.agents
     this.setHostnames()
-    node.executeScript(Scripts.START_AGENT_MULTIPLE, printResult = true, masters.map(_.getIp): _*)
+    node.executeScript(Scripts.START_AGENT, printResult = true, masters.map(_.getIp): _*)
   }
+
 
   override def shutdownCluster() = {
     throw new NotImplementedException()
@@ -123,7 +129,7 @@ class MesosCluster(val clusterName: String,
 
   }
 
-  def setHostnames(): Unit = {
+  private def setHostnames(): Unit = {
     val all = masters ::: agents
     all.foreach(node => {
       val args = all.filter(_ != node).map(n => s"${n.getIp} ${n.getHostname}").mkString(" ")
@@ -142,10 +148,10 @@ class MesosCluster(val clusterName: String,
   /**
     * Start mesos masters and mesos agents
     **/
-  def startCluster(): Unit = {
+  private def startCluster(): Unit = {
     masters.foreach(m => m.executeScript(Scripts.START_MULTIPLE_MASTER, printResult = true,
                                           clusterName :: masters.map(_.getIp): _*))
-    agents.foreach(a => a.executeScript(Scripts.START_AGENT_MULTIPLE, printResult = true,
+    agents.foreach(a => a.executeScript(Scripts.START_AGENT, printResult = true,
                                          masters.map(_.getIp): _*))
   }
 

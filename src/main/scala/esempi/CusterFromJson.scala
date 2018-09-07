@@ -1,7 +1,7 @@
 package esempi
 
 import cluster.MesosCluster
-import task.GenericTask
+import task.{GenericTask, TaskBuilder}
 
 object CusterFromJson extends App {
   override def main(args: Array[String]) = {
@@ -12,9 +12,12 @@ object CusterFromJson extends App {
 
     Thread.sleep(10000) //Wait that the cluster is full operative
 
-    cluster.run(new GenericTask("TaskName", 1, 512, 0,
-                                 Some("echo ciao;sleep 10 "),
-                                 None, Map()))
+    cluster.run(new TaskBuilder()
+      .id("task")
+      .cpus(1)
+      .mem(512)
+      .cmd("echo smack;sleep 10")
+      .build())
 
   }
 
