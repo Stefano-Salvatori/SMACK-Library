@@ -3,7 +3,6 @@ package cluster
 import java.io.{BufferedReader, File, InputStreamReader}
 import java.nio.file.{Files, Paths}
 
-import ch.ethz.ssh2.log.Logger
 import ch.ethz.ssh2.{Connection, SCPClient, StreamGobbler}
 
 object Node {
@@ -29,8 +28,7 @@ case class Node(private val ip: String,
     * executeCommand("rm ./script_name")
     *
     * @param script
-    * the script to execute. The only available scripts are the ones listed in
-    * [[cluster.Scripts]]
+    * the [[cluster.Script]] to execute.
     * @param printResult
     * whether or not to print the result of the script on the console
     * @param params
@@ -38,8 +36,8 @@ case class Node(private val ip: String,
     * @return
     * the result string
     */
-  def executeScript(script: Scripts, printResult: Boolean, params: String*) = {
-    val scriptFile = new File(script.getPath)
+  def executeScript(script: Script, printResult: Boolean, params: String*) = {
+    val scriptFile = new File(script.path)
     val conn = new Connection(this.getIp)
     conn.connect()
     conn.authenticateWithPublicKey(usr, keyFile, keyPsw)
@@ -47,7 +45,7 @@ case class Node(private val ip: String,
     val scp = new SCPClient(conn)
     //send the file to execute via scp
     val ouputStream = scp.put(scriptFile.getName, scriptFile.length, ".", "7777")
-    ouputStream.write(Files.readAllBytes(Paths.get(script.getPath)))
+    ouputStream.write(Files.readAllBytes(Paths.get(script.path)))
     ouputStream.close()
     conn.close()
     val result = this.executeCommand(s"./${scriptFile.getName} ${params.mkString(" ")}", printResult)
