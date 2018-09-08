@@ -7,62 +7,60 @@ import java.util.UUID
   */
 class TaskBuilder {
 
-  private var _id: String = UUID.randomUUID().toString
-  private var _cpus: Double = 1.0
-  private var _mem: Double = 512.0
-  private var _disk: Double = 0.0
-  private var _cmd: Option[String] = None
+  private var id: String = UUID.randomUUID().toString
+  private var cpus: Double = 0.5
+  private var mem: Double = 512.0
+  private var disk: Double = 0.0
+  private var cmd: Option[String] = None
 
-  private var _container: Option[Container] = None
-
-  private var _env: Map[String, String] = Map()
-
-  private var _instances: Int = 1
+  private var container: Option[Container] = None
+  private var env: Map[String, String] = Map()
+  private var instances: Int = 1
 
 
-  def id(name: String): TaskBuilder = {
-    this._id = name
+  def setId(name: String): TaskBuilder = {
+    this.id = name
     this
   }
 
-  def cpus(cpus: Double): TaskBuilder = {
-    this._cpus = cpus
+  def setCpus(cpus: Double): TaskBuilder = {
+    this.cpus = cpus
     this
   }
 
-  def mem(mem: Double): TaskBuilder = {
-    this._mem = mem
+  def setMemory(mem: Double): TaskBuilder = {
+    this.mem = mem
     this
   }
 
-  def disk(disk: Double): TaskBuilder = {
-    this._disk = disk
+  def setDisk(disk: Double): TaskBuilder = {
+    this.disk = disk
     this
   }
 
-  def cmd(cmd: String): TaskBuilder = {
-    this._cmd = Some(cmd)
+  def setCmd(cmd: String): TaskBuilder = {
+    this.cmd = Some(cmd)
     this
   }
 
-  def container(container: Container): TaskBuilder = {
-    this._container = Some(container)
+  def SetContainer(container: Container): TaskBuilder = {
+    this.container = Some(container)
     this
   }
 
   def setEnv(key: String, value: String): TaskBuilder = {
-    this._env += key -> value
+    this.env += key -> value
     this
   }
 
   def instances(instances: Int): TaskBuilder = {
-    this._instances = instances
+    this.instances = instances
     this
   }
 
   def build(): GenericTask = {
-    new GenericTask(this._id, this._cpus, this._mem, this._disk,
-                     this._cmd, this._container, this._env, this._instances)
+    new GenericTask(this.id, this.cpus, this.mem, this.disk,
+                     this.cmd, this.container, this.env, this.instances)
   }
 
 

@@ -84,8 +84,9 @@ object CassandraTask {
 }
 
 class CassandraTask(id: String, cpus: Double, mem: Double, disk: Double,
-                    cmd: Option[String])
-  extends GenericTask(id, cpus, mem, disk, cmd, CassandraTask.CASSANDRA_CONTAINER, Map()) {
+                    cmd: Option[String], instances: Int = 1)
+  extends GenericTask(id, cpus, mem, disk, cmd, CassandraTask.CASSANDRA_CONTAINER, Map(),
+                       instances) {
 
   def set(name: CassandraVariable, value: String) = {
     super.setEnvVariable(name.toString, value)

@@ -73,7 +73,6 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
     this.startMarathon()
   }
 
-
   /**
     * Run an app on the cluster.
     *
@@ -82,12 +81,21 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
     */
   def run(marathonTask: MarathonTask): Unit = {
     marathonTask.saveAsJson()
-    val response = (this.curlCmd + " -X POST -H \"Content-type: application/json\" " +
+    val response = (s"${this.curlCmd} -X POST -H \"Content-type: application/json\" " +
       s"${masters.head.getIp}:8080/v2/apps " +
       s"-d@${marathonTask.id}.json") !!
 
     //new File(s"${marathonTask.id}.json").delete()
     println(prettyRender(parse(response)))
+  }
+
+  /**
+    * Kill a task running in the cluster
+    * @param marathonTask
+    *                     the task to kill
+    */
+  def stop(marathonTask: MarathonTask):Unit = {
+    s"${this.curlCmd} -X DELETE ${masters.head.getIp}:8080/v2/apps/${marathonTask.id}" !!
   }
 
   /**
@@ -103,7 +111,6 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
     this.setHostnames()
     node.executeScript(StartAgent(), printResult = true, masters.map(_.getIp): _*)
   }
-
 
   override def shutdownCluster() = {
     throw new NotImplementedException()
