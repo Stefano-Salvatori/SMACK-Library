@@ -1,6 +1,8 @@
 package cluster
 
-
+/**
+  * Builder class for a MesosCluster
+  */
 class MesosClusterBuilder() {
   private var name: String = ""
   private var agents: List[String] = List()
@@ -60,6 +62,8 @@ class MesosClusterBuilder() {
                                                                                 sshKeyPassword)),
                                                 this.agents.map(a => new Node(a, user, sshKeyPath,
                                                                                sshKeyPassword)))
+
+
 
 
 }

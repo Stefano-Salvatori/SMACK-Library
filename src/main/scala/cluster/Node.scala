@@ -87,6 +87,10 @@ case class Node(private val ip: String,
     result
   }
 
+  /**
+    *
+    * @return the hostname of this node
+    */
   def getHostname: String = {
     if (this.hostname == null) {
       this.hostname = this.executeCommand("hostname", printResult = false)

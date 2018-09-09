@@ -3,10 +3,11 @@ package task
 import java.io._
 
 import net.liftweb.json.Serialization
-import net.liftweb.json.ext.EnumNameSerializer
 
-
-trait MarathonTask {
+/**
+  * A task represents a 'job' that must be executed.
+  */
+trait Task {
 
   var id: String
 

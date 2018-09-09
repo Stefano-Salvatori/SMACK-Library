@@ -2,7 +2,7 @@ package cluster
 
 /**
   * A cluster represents a set of connected machines; some of them acts as masters and some as
-  * agents. It's possible to add/replace agent nodes while master nodes must remain the same.
+  * agents. It's possible to add/replace agent nodes to scale up performance
   *
   */
 trait Cluster {
