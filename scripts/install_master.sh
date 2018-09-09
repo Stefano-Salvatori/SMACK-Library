@@ -19,7 +19,6 @@ else
     echo "Spark directory $directory already exists"
 fi
 
-
 #install java
 scalaVersion=2.11.12
 echo "Installing Java..."

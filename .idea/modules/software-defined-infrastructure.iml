@@ -173,5 +173,6 @@
     <orderEntry type="library" name="sbt: commons-collections:commons-collections:3.2.2:jar" level="project" />
     <orderEntry type="library" name="sbt: org.apache.mesos:mesos:1.4.0:shaded-protobuf:jar" level="project" />
     <orderEntry type="library" name="sbt: org.apache.spark:spark-mesos_2.11:2.3.1:jar" level="project" />
+    <orderEntry type="library" name="scala-sdk-2.11.12" level="application" />
   </component>
 </module>
