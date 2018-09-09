@@ -36,6 +36,5 @@ object Main extends App {
   println("Starting Marathon")
   "sudo service marathon restart" !!
 }
-
 Main.main(args)
 

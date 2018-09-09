@@ -42,9 +42,6 @@ object Main extends App {
     println(s"\t $ip $host")
     writeToFile("/etc/hosts", s"\n$ip $host", append = true)
   }
-
-
 }
-
 Main.main(args)
 

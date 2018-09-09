@@ -11,6 +11,5 @@ import scala.language.postfixOps
 object Main extends App {
   "sudo service mesos-agent stop" !!
 }
-
 Main.main(args)
 
