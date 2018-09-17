@@ -7,13 +7,16 @@ object StartSmack extends App {
   override def main(args: Array[String]) = {
     val mesos = new MesosClusterBuilder()
       .setClusterName("Mesos-Cluster")
-      .setMasters(List("138.68.96.19"))
-      .setAgents(List("46.101.185.12", "46.101.208.135"))
-      .setConnection("root", "private_key_openssh", "")
+      .setMasters(List("159.65.127.232"))
+      .setAgents(List("159.65.114.239", "159.65.113.201", "159.65.117.154"))
+      .setConnection("root", "C:\\Users\\stefa\\Desktop\\private_key_openssh", "")
       .build()
-    val smack = new SmackEnvironment(mesos,"CassandraCluster","KafkaCluster")
-    smack.startCassandraDatabase(1, 2, 2048)
-    //smack.startKafkaCluster("KafkaCluster",3, 2, 1024)
-    //smack.startSparkFramework()
+    val smack = new SmackEnvironment(mesos, "cassandra-cluster", "kafka-cluster")
+    smack.startCassandraCluster(serversCount = 2, cpus = 2, memory = 2048)
+
+    smack.startKafkaCluster(brokersCount = 1, cpus = 2, memory = 2048)
+
+    smack.startSparkFramework()
+
   }
 }

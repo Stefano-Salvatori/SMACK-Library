@@ -14,14 +14,14 @@ libraryDependencies += "net.liftweb" %% "lift-json-ext" % "3.3.0"
 libraryDependencies += "net.liftweb" %% "lift-json" % "3.3.0"
 
 //Spark-Cassandra connection library
-libraryDependencies += "com.datastax.spark" %% "spark-cassandra-connector" % "2.3.1"
+//libraryDependencies += "com.datastax.spark" %% "spark-cassandra-connector" % "2.3.1"
 
 //Spark Mesos
-libraryDependencies += "org.apache.spark" %% "spark-mesos" % "2.3.1"
+//libraryDependencies += "org.apache.spark" %% "spark-mesos" % "2.3.1"
 
 
 //Spark library
-libraryDependencies += "org.apache.spark" %% "spark-core" % "2.3.1"
+//libraryDependencies += "org.apache.spark" %% "spark-core" % "2.3.1"
 
 
 

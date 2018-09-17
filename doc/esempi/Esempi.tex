@@ -184,7 +184,8 @@ tabsize=3,
     \end{labeling}
 
     \section{Setup di uno stack SMACK}\label{sec:setupSmack}
-    A questo punto \`e possibile , utilizzando la classe \textbf{SmackEnvironment}, configurare uno stack SMACK con poche righe di codice:
+    A questo punto \`e possibile , utilizzando le classi \textbf{CassandraCluster} e
+    \textbf{KafkaCluster}, configurare uno stack SMACK con poche righe di codice:
 
     \begin{lstlisting}[style=myScalastyle]
         import cluster.MesosClusterBuilder
@@ -197,29 +198,19 @@ tabsize=3,
         mesos.createCluster()
 
         Thread.sleep(30000)
-        val smack = new SmackEnvironment(mesos,"CassandraCluster","KafkaCluster")
-        smack.startCassandraDatabase(3, 2, 2048)
-        smack.startKafkaCluster(3, 2, 1024)
-        smack.startSparkFramework()
+        val cassandra = new CassandraCluster(mesos, "cassandra-cluster")
+        cassandra.start(nodes = 3, cpus = 2, memory = 2048)
+
+        val kafka = new KafkaCluster(mesos, "kafka-cluster")
+        kafka.start(brokers = 2, cpus = 2, memory = 2048)
         }
         }
     \end{lstlisting}
-    La classe SmackEnvironment deve essere instanziata con questi parametri:
-    \begin{labeling}{cassandraClusterName}
-        \item[mesos]
-        il cluster mesos su cui gireranno spark,cassandra e kafka
-        \item [cassandraClusterName]
-        il nome da assegnare al cluster cassandra
-        \item [kafkaClusterName]
-        il nome da assegnare al cluster kafka
-    \end{labeling}
+    Le classi deve essere instanziata con questi parametri:
 
-    I metodi \textit{startCassandraDatabase} e \textit{startKafkaCluster} prendono invece in input il numero di nodi che andranno a formare il cluster con cpu e RAM da assegnare ad ogni nodo;
-    \textit{startSparkFramework} fa partire il framework spark all'interno di mesos in modo da poter eseguire spark jobs sul cluster.
-
-    Anche in questo caso è possibile scalare l'architettura a seconda delle esigenze richimando i metodi
+    Anche in questo caso \`e possibile scalare l'architettura a seconda delle esigenze richimando i metodi
     \begin{lstlisting}[style=myScalastyle]
-        smack.addCassandraNode(cpus,memory) e smack.addKafkaBroker(cpus,memory)
+        cassandra.addNode(cpus,memory) e kafka.addBroker(cpus,memory)
     \end{lstlisting}
     \begin{lstlisting}[style=myScalastyle]
         object ScaleSmack extends App {
@@ -227,12 +218,14 @@ tabsize=3,
         val mesos = MesosCluster.fromJson("clusterConfig.json")
         mesos.createCluster()
         Thread.sleep(30000)
-        val smack = new SmackEnvironment(mesos,"CassandraCluster","KafkaCluster")
-        smack.startCassandraDatabase(3, 2, 2048)
-        smack.startKafkaCluster(3, 2, 1024)
+        val cassandra = new CassandraCluster(mesos, "cassandra-cluster")
+        cassandra.start(nodes = 3, cpus = 2, memory = 2048)
+        val kafka = new KafkaCluster(mesos, "kafka-cluster")
+        kafka.start(brokers = 2, cpus = 2, memory = 2048)
+
         Thread.sleep(30000)
-        smack.addCassandraNode(2, 2048)
-        smack.addKafkaBroker(1,2048)
+        cassandra.addNode(2, 2048)
+        kafka.addBroker(1,2048)
         }
         }
     \end{lstlisting}
