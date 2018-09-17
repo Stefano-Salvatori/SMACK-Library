@@ -1,18 +1,11 @@
 package smack
 
-import java.io.{File, FileNotFoundException}
-
 import cluster.MesosCluster
-import com.datastax.driver.core.{Cluster, Session}
-import net.liftweb.json.JsonAST.{JField, JInt, JValue}
-import task.CassandraTask.CassandraVariable
-import task.KafkaTask.KafkaVariable
-import task.{CassandraTask, KafkaTask, TaskBuilder}
-import utils.Utils
-import net.liftweb.json.{JsonAST, parse, prettyRender}
+import smack.CassandraCluster.CassandraConnectionInfo
+import smack.KafkaCluster.KafkaConnectionInfo
+import task.TaskBuilder
 
 import scala.language.postfixOps
-import scala.sys.process._
 
 object SmackEnvironment {
   val SPARK_VERSION = "spark-2.3.1-bin-hadoop2.7"
@@ -31,6 +24,7 @@ object SmackEnvironment {
 class SmackEnvironment(private val mesos: MesosCluster,
                        private var cassandraClusterName: String,
                        private var kafkaClusterName: String) {
+
 
   /*case class FullTaskResponse(id: String,
                               backoffFactor: Double,
@@ -58,115 +52,55 @@ class SmackEnvironment(private val mesos: MesosCluster,
                               tasksUnhealthy: Int,
                               deployments: Array[Map[String, String]],
                               tasks: Array[String])*/
+  //cassandraClusterName = cassandraClusterName.toLowerCase()
+  //kafkaClusterName = kafkaClusterName.toLowerCase()
 
-  implicit val formats = net.liftweb.json.DefaultFormats
+  private val cassandraCluster: CassandraCluster =
+    new CassandraCluster(mesos, cassandraClusterName.toLowerCase)
+  private val kafkaCluster: KafkaCluster =
+    new KafkaCluster(mesos, kafkaClusterName.toLowerCase)
 
-  cassandraClusterName = cassandraClusterName.toLowerCase()
-  kafkaClusterName = kafkaClusterName.toLowerCase()
-
-  private var cassandraNodesCount = mesos.getTaskInfo(this.cassandraClusterName) match {
-    case Some(info) =>
-      (parse(info) findField {
-        case JField(n, v) => n == "instances"
-      }).get.value.extract[Int]
-    case None => 0
-  }
-
-
-  private var kafkaBrokersCount = mesos.getTaskInfo(this.kafkaClusterName) match {
-    case Some(info) =>
-      (parse(info) findField {
-        case JField(n, v) => n == "instances"
-      }).get.value.extract[Int]
-    case None => 0
-  }
 
   /**
-    * Start a cassandra database with the configurations (name,nodes count..) specified
-    * in this smack environment object
+    * Starts Cassandra on mesos.
+    *
+    * @param serversCount
+    * number of cassandra nodes
+    * @param cpus
+    * cpu reserved for each node
+    * @param memory
+    * memory for each node
     */
-  def startCassandraDatabase(serversCount: Int, cpus: Double, memory: Double)
-  : Unit = {
-    if (this.cassandraNodesCount != 0) {
-      this.cassandraNodesCount += serversCount
-      val task = new CassandraTask(this.cassandraClusterName, cpus, memory, 0, None, serversCount)
-      task.set(CassandraVariable.CASSANDRA_CLUSTER_NAME, this.cassandraClusterName)
-      task.set(CassandraVariable.CASSANDRA_SEEDS, mesos.agents.map(_.getIp).mkString(","))
-      mesos.run(task)
-    } else {
-      throw new IllegalStateException("Cassandra cluster already exists. " +
-        "Use 'addCassandraNode' to scale it up")
-    }
-  }
+  def startCassandraCluster(serversCount: Int, cpus: Double, memory: Double)
+  : Unit = this.cassandraCluster.start(serversCount, cpus, memory)
+
 
   /**
-    * Start a kafka cluster with the configurations (brokers count...) specified
-    * in this smack environment object
+    * Starts Kafka on mesos
+    *
+    * @param brokersCount
+    * number of kafka brokers
+    * @param cpus
+    * cpus for each broker
+    * @param memory
+    * memory for each broker
     */
   def startKafkaCluster(brokersCount: Int, cpus: Double, memory: Double): Unit = {
-    if (this.kafkaBrokersCount != 0) {
-      this.kafkaBrokersCount += brokersCount
-      val kafka = new KafkaTask(this.kafkaClusterName, cpus, memory, disk = 0,
-                                 cmd = None, instances = brokersCount)
-      kafka.set(KafkaVariable.HOSTNAME_COMMAND,
-                 "ip -4 route get 8.8.8.8 | awk {'print $7'} | tr -d '\\n'")
-      kafka.set(KafkaVariable.KAFKA_ZOOKEEPER_CONNECT,
-                 s"${mesos.masters.map(_.getIp).mkString(",")}:2181/kafka")
-      kafka.set(KafkaVariable.KAFKA_LISTENERS,
-                 "INSIDE://_{HOSTNAME_COMMAND}:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9094")
-      kafka.set(KafkaVariable.KAFKA_ADVERTISED_LISTENERS,
-                 "INSIDE://_{HOSTNAME_COMMAND}:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9094")
-      kafka.set(KafkaVariable.KAFKA_LISTENER_SECURITY_PROTOCOL_MAP,
-                 "INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT")
-      kafka.set(KafkaVariable.KAFKA_INTER_BROKER_LISTENER_NAME, "INSIDE")
-      kafka.setEnvVariable("KAFKA_DELETE_TOPIC_ENABLE", "true")
-
-      mesos.run(kafka)
-    }
-    else {
-      throw new IllegalStateException("Kafka cluster already exists. " +
-        "Use 'addKafkaBroker' to scale it up")
-    }
+    this.kafkaCluster.start(brokersCount, cpus, memory)
   }
 
   /**
     * Adds a node in the existing cassandra cluster
     */
   def addCassandraNode(cpus: Double, memory: Double): Unit = {
-    this.cassandraNodesCount += 1
-    val triplet = "\"\"\""
-    val msg =
-      s""" "{${
-        triplet
-      }instances${
-        triplet
-      }:${
-        this.cassandraNodesCount
-      }}" """
-    val response = Utils.curlCmd + " -X PATCH -H \"Content-type: application/json\" " +
-      s"${
-        mesos.masters.head.getIp
-      }:8080/v2/apps/${
-        this.cassandraClusterName
-      } -d $msg " !!
-
-    //println(prettyRender(parse(response)))
+    this.cassandraCluster.addNode(cpus, memory)
   }
 
   /**
     * Adds a kafka broker in the existing kafka cluster
     */
   def addKafkaBroker(cpus: Double, memory: Double): Unit = {
-    this.kafkaBrokersCount += 1
-    Utils.curlCmd + " -X PATCH -H \"Content-type: application/json\" " +
-      s"${
-        mesos.masters.head.getIp
-      }:8080/v2/apps/${
-        this.kafkaClusterName
-      } " +
-      s"""-d '{"instances":${
-        this.kafkaBrokersCount
-      }""" !!
+    this.kafkaCluster.addNode(cpus, memory)
 
   }
 
@@ -192,13 +126,31 @@ class SmackEnvironment(private val mesos: MesosCluster,
   }
 
 
-  def getCassandraSession: Session = {
-    val builder = new Cluster.Builder
-    mesos.agents.foreach(a => builder.addContactPoint(a.getIp))
-    val cluster = builder
-      .withPort(9042)
-      .build()
-    cluster.connect()
+  /**
+    * Get the information about the cassandra cluster:
+    * cluster name, nodes count, ip addresses of the nodes and the port to use for
+    * the connection
+    *
+    * @return
+    * An optional that contains the informations of the cassandra cluster;
+    * None if the cluster doesn't exist
+    */
+  def getCassandraInfo: Option[CassandraConnectionInfo] = {
+    this.cassandraCluster.getConnectionInfo
   }
+
+  /**
+    * Get the informations about the kafka cluster:
+    * cluster name, brokers count, and a map that associates ip of the broker to the port they
+    * are listening on
+    *
+    * @return
+    * An optional that contains the informations of the kafka cluster;
+    * None if the cluster doesn't exist
+    */
+  def getKafkaInfo: Option[KafkaConnectionInfo] = {
+    this.kafkaCluster.getConnectionInfo
+  }
+
 
 }

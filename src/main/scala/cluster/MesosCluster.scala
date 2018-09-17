@@ -4,7 +4,6 @@ import java.io.FileNotFoundException
 
 import cluster.MesosCluster._
 import net.liftweb.json.{DefaultFormats, parse}
-import org.apache.commons.lang.NotImplementedException
 import task.Task
 import utils.Utils
 
@@ -114,8 +113,7 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
     */
   def getTaskInfo(id: String): Option[String] = {
     try {
-      Some(scala.io.Source.fromURL(s"http://${masters.head.getIp}:8080/v2/apps/$id")
-        .mkString)
+      Some(scala.io.Source.fromURL(s"http://${masters.head.getIp}:8080/v2/apps/$id").mkString)
     } catch {
       case noApp: FileNotFoundException => None
     }
