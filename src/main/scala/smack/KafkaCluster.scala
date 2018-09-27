@@ -37,15 +37,13 @@ private class KafkaCluster(override val mesos: MesosCluster,
   }
 
 
-  override protected def run(nodes: Int, cpus: Double, memory: Double) = {
+  def run(nodes: Int, cpus: Double, memory: Double) = {
     val kafka = new KafkaTask(this.clusterName, cpus, memory, disk = 0,
                                cmd = None, instances = nodes)
     kafka.set(KafkaVariable.HOSTNAME_COMMAND,
                "ip -4 route get 8.8.8.8 | awk {'print $7'} | tr -d '\\n'")
     kafka.set(KafkaVariable.KAFKA_ZOOKEEPER_CONNECT,
-               s"${
-                 mesos.masters.map(_.getIp).mkString(",")
-               }:2181/kafka")
+               s"${mesos.masters.map(_.getIp).mkString(",")}:2181/kafka")
     kafka.set(KafkaVariable.KAFKA_LISTENERS,
                "INSIDE://_{HOSTNAME_COMMAND}:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9094")
     kafka.set(KafkaVariable.KAFKA_ADVERTISED_LISTENERS,

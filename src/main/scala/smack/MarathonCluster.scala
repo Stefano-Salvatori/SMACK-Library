@@ -10,7 +10,7 @@ import scala.sys.process._
 /**
   * Represents an abstraction of a cluster running as a marathon service inside mesos
   */
-trait MarathonCluster {
+private trait MarathonCluster {
   implicit val formats = net.liftweb.json.DefaultFormats
   val mesos: MesosCluster
   val clusterName: String
@@ -22,7 +22,7 @@ trait MarathonCluster {
     case None => 0
   }
 
-  protected def run(serversCount: Int, cpus: Double, memory: Double)
+  protected def run(startingNodes: Int, cpus: Double, memory: Double)
 
 
   /**
@@ -39,22 +39,18 @@ trait MarathonCluster {
     if (this.runningNodes != 0) {
       throw new IllegalStateException("This cluster is already started")
     } else {
-      this.run(nodes: Int, cpus: Double, memory: Double)
+      this.run(nodes, cpus, memory)
       this.runningNodes += nodes
     }
   }
 
-  /**
-    *
-    * @return the
-    */
   def getConnectionInfo: Option[_]
 
   /**
     * Adds a node in the existing cluster
     */
-  def addNode(cpus: Double, memory: Double): Unit = {
-    this.runningNodes += 1
+  def addNodes(howMany: Int): Unit = {
+    this.runningNodes += howMany
     val msg =s""" "{\"\"\"instances\"\"\":${this.runningNodes}}" """
     val response = Utils.curlCmd + " -X PATCH -H \"Content-type: application/json\" " +
       s"${mesos.masters.head.getIp}:8080/v2/apps/${this.clusterName} -d $msg " !!

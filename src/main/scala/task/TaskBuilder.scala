@@ -43,7 +43,7 @@ class TaskBuilder {
     this
   }
 
-  def SetContainer(container: Container): TaskBuilder = {
+  def setContainer(container: Container): TaskBuilder = {
     this.container = Some(container)
     this
   }

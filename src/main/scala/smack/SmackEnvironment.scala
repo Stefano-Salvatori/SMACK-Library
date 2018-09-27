@@ -1,6 +1,8 @@
 package smack
 
 import cluster.MesosCluster
+import net.liftweb.json.JsonAST.{JField, JObject, JString}
+import net.liftweb.json.parse
 import smack.CassandraCluster.CassandraConnectionInfo
 import smack.KafkaCluster.KafkaConnectionInfo
 import task.TaskBuilder
@@ -24,41 +26,18 @@ object SmackEnvironment {
 class SmackEnvironment(private val mesos: MesosCluster,
                        private var cassandraClusterName: String,
                        private var kafkaClusterName: String) {
-
-
-  /*case class FullTaskResponse(id: String,
-                              backoffFactor: Double,
-                              backoffSeconds: Double,
-                              cmd: String,
-                              cpus: Double,
-                              disk: Double,
-                              executor: String,
-                              instances: Int,
-                              labels: Map[String, String],
-                              maxLaunchDelaySeconds: Int,
-                              mem: Double,
-                              gpus: Double,
-                              networks: Array[Map[String, String]],
-                              portDefinitions: Array[(String, String, String)], //port:-,name:-,protocol:-,
-                              requirePorts: Boolean,
-                              upgradeStrategy: Map[String, Int],
-                              version: String,
-                              versionInfo: Map[String, String],
-                              killSelection: String,
-                              unreachableStrategy: Map[String, Int],
-                              tasksStaged: Int,
-                              tasksRunning: Int,
-                              tasksHealthy: Int,
-                              tasksUnhealthy: Int,
-                              deployments: Array[Map[String, String]],
-                              tasks: Array[String])*/
-  //cassandraClusterName = cassandraClusterName.toLowerCase()
-  //kafkaClusterName = kafkaClusterName.toLowerCase()
-
   private val cassandraCluster: CassandraCluster =
     new CassandraCluster(mesos, cassandraClusterName.toLowerCase)
   private val kafkaCluster: KafkaCluster =
     new KafkaCluster(mesos, kafkaClusterName.toLowerCase)
+
+  private val sparkDispathcerTask = new TaskBuilder()
+    .setId("spark-dispatcher")
+    .setCpus(0.5).setMemory(512).setDisk(0)
+    .setCmd(s"/root/${SmackEnvironment.SPARK_VERSION}/bin/spark-class " +
+      "org.apache.spark.deploy.mesos.MesosClusterDispatcher " +
+      s"--master mesos://${mesos.zkConnectionString}/mesos")
+    .build()
 
 
   /**
@@ -92,15 +71,15 @@ class SmackEnvironment(private val mesos: MesosCluster,
   /**
     * Adds a node in the existing cassandra cluster
     */
-  def addCassandraNode(cpus: Double, memory: Double): Unit = {
-    this.cassandraCluster.addNode(cpus, memory)
+  def addCassandraNodes(howMany: Int): Unit = {
+    this.cassandraCluster.addNodes(howMany)
   }
 
   /**
     * Adds a kafka broker in the existing kafka cluster
     */
-  def addKafkaBroker(cpus: Double, memory: Double): Unit = {
-    this.kafkaCluster.addNode(cpus, memory)
+  def addKafkaBrokers(howMany: Int): Unit = {
+    this.kafkaCluster.addNodes(howMany)
 
   }
 
@@ -109,20 +88,7 @@ class SmackEnvironment(private val mesos: MesosCluster,
     *
     */
   def startSparkFramework(): Unit = {
-    val sparkDispatcherTask = new TaskBuilder()
-      .setId("spark-dispatcher")
-      .setCpus(0.5).setMemory(512).setDisk(0)
-      .setCmd(s"/root/${
-        SmackEnvironment.SPARK_VERSION
-      }/bin/spark-class " +
-        "org.apache.spark.deploy.mesos.MesosClusterDispatcher " +
-        s"--master mesos://${
-          mesos.zkConnectionString
-        }/mesos")
-      .build()
-    mesos.run(sparkDispatcherTask)
-
-
+    mesos.run(this.sparkDispathcerTask)
   }
 
 
@@ -150,6 +116,24 @@ class SmackEnvironment(private val mesos: MesosCluster,
     */
   def getKafkaInfo: Option[KafkaConnectionInfo] = {
     this.kafkaCluster.getConnectionInfo
+  }
+
+  /**
+    *
+    * @return the ip address of the spark dispatcher thread
+    */
+  def getSparkDispatcherIp: Option[String] = {
+    this.mesos.getTaskInfo(this.sparkDispathcerTask) match {
+      case Some(info) =>
+        val tasks = parse(info)
+        val dispatcherIp = tasks find {
+          case JField("host", _) => true
+          case _ => false
+        }
+        Some(dispatcherIp.get.extract[String])
+      case None => None
+    }
+
   }
 
 

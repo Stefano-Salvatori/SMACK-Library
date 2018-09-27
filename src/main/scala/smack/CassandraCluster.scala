@@ -13,7 +13,7 @@ object CassandraCluster {
 
 }
 
-class CassandraCluster(override val mesos: MesosCluster, override val clusterName: String)
+private class CassandraCluster(override val mesos: MesosCluster, override val clusterName: String)
   extends MarathonCluster {
 
   /**
@@ -21,7 +21,7 @@ class CassandraCluster(override val mesos: MesosCluster, override val clusterNam
     *         listening on;
     *         None if the cluster doesn't exist
     */
-  override def getConnectionInfo = {
+  def getConnectionInfo = {
     mesos.getTaskInfo(this.clusterName) match {
       case Some(info) =>
         val tasks = parse(info)
@@ -32,7 +32,7 @@ class CassandraCluster(override val mesos: MesosCluster, override val clusterNam
     }
   }
 
-  override protected def run(nodes: Int, cpus: Double, memory: Double) = {
+  def run(nodes: Int, cpus: Double, memory: Double) = {
     val task = new CassandraTask(this.clusterName, cpus, memory, 0, None, nodes)
     task.set(CassandraVariable.CASSANDRA_CLUSTER_NAME, this.clusterName)
     task.set(CassandraVariable.CASSANDRA_SEEDS, mesos.agents.map(_.getIp).mkString(","))

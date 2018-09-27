@@ -36,7 +36,7 @@ case class Node(private val ip: String,
     * @return
     * the result string
     */
-  def executeScript(script: Script, printResult: Boolean, params: String*) = {
+  def executeScript(script: Script, params: String*)(printResult: Boolean = true) = {
     val scriptFile = new File(script.path)
     val conn = new Connection(this.getIp)
     conn.connect()

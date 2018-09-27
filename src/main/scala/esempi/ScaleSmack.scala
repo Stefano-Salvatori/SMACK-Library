@@ -1,18 +1,20 @@
 package esempi
 
-import cluster.{MesosCluster, MesosClusterBuilder}
+import cluster.MesosCluster
 import smack.SmackEnvironment
-
 
 object ScaleSmack extends App {
   override def main(args: Array[String]) = {
-    val mesos = new MesosClusterBuilder()
-      .setClusterName("Mesos-Cluster")
-      .setMasters(List("46.101.231.133"))
-      .setAgents(List("138.197.187.246", "165.227.160.90"))
-      .setConnection("root", "C:\\Users\\stefa\\Desktop\\private_key_openssh", "")
-      .build()
-    val smack = new SmackEnvironment(mesos,"CassandraCluster","KafkaCluster")
-    smack.addCassandraNode(1, 2048)
+    val mesos = MesosCluster.fromJson("clusterConfig.json")
+    mesos.createCluster()
+    val smack = new SmackEnvironment(mesos, "cassandra-cluster", "kafka-cluster")
+    smack.startCassandraCluster(serversCount = 2, cpus = 2, memory = 2048)
+    smack.startKafkaCluster(brokersCount = 1, cpus = 2, memory = 2048)
+    smack.startSparkFramework()
+
+    Thread.sleep(1000)
+
+    smack.addCassandraNodes(1)
+    smack.addKafkaBrokers(2)
   }
 }
