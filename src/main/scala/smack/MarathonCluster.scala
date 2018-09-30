@@ -3,7 +3,9 @@ package smack
 import cluster.MesosCluster
 import net.liftweb.json.JsonAST.JField
 import net.liftweb.json.parse
+import task.Task
 import utils.Utils
+
 import scala.sys.process._
 
 
@@ -22,8 +24,15 @@ private trait MarathonCluster {
     case None => 0
   }
 
-  protected def run(startingNodes: Int, cpus: Double, memory: Double)
-
+  /**
+    *
+    * @param cpus
+    *             the cpu to assing to this task
+    * @param memory
+    *               the memory reserved for this task
+    * @return
+    */
+  protected def nodeTask(cpus: Double, memory: Double): Task
 
   /**
     * Starts the cluster on mesos.
@@ -36,10 +45,12 @@ private trait MarathonCluster {
     * memory for each node
     */
   def start(nodes: Int, cpus: Double, memory: Double) = {
-    if (this.runningNodes != 0) {
+    if (getRunningNodes != 0) {
       throw new IllegalStateException("This cluster is already started")
     } else {
-      this.run(nodes, cpus, memory)
+      val task = this.nodeTask(cpus,memory)
+      task.instances = nodes
+      mesos.run(task)
       this.runningNodes += nodes
     }
   }

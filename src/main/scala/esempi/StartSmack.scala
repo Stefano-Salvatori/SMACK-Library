@@ -16,5 +16,7 @@ object StartSmack extends App {
     smack.startKafkaCluster(brokersCount = 1, cpus = 2, memory = 2048)
     smack.startSparkFramework()
 
+    smack.getCassandraConnectionInfo
+
   }
 }

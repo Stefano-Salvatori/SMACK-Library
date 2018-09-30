@@ -6,6 +6,17 @@ import net.liftweb.json.Serialization
 import net.liftweb.json.ext.EnumNameSerializer
 
 object GenericTask {
+
+  def apply(id: String,
+             cpus: Double,
+             mem: Double,
+             disk: Double,
+             cmd: Option[String],
+             container: Option[Container],
+             env: Map[String, String],
+             instances: Int = 1): GenericTask =
+    new GenericTask(id, cpus, mem, disk, cmd, container, env, instances)
+
   def loadFromJson(json: String): GenericTask = {
     implicit val formats = net.liftweb.json.DefaultFormats +
       new TaskSerializer()
@@ -16,22 +27,23 @@ object GenericTask {
 
 /**
   * A generic task
+  *
   * @param id
-  *           the task ID
+  * the task ID
   * @param cpus
-  *             number of CPUS
+  * number of CPUS
   * @param mem
-  *            RAM
+  * RAM
   * @param disk
-  *             space on disk needed for this task
+  * space on disk needed for this task
   * @param cmd
-  *            the bash command to execute
+  * the bash command to execute
   * @param container
-  *                  the container to execute
+  * the container to execute
   * @param env
-  *            map key-> value fro environment values
+  * map key-> value fro environment values
   * @param instances
-  *                  number of instances that has to be launched
+  * number of instances that has to be launched
   */
 class GenericTask(var id: String,
                   var cpus: Double,

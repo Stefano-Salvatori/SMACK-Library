@@ -1,10 +1,10 @@
 package task
 
-import task.DockerContainer.Parameter
+import task.DockerContainer.DockerParameter
 
 object DockerContainer {
 
-  case class Parameter(key: String, value: String)
+  case class DockerParameter(key: String, value: String)
 
 }
 
@@ -29,4 +29,4 @@ case class DockerContainer(image: String,
                            forcePullImage: Boolean,
                            privileged: Boolean,
                            ports: Array[Int],
-                           parameters: Array[Parameter] = Array())
+                           parameters: Array[DockerParameter] = Array())

@@ -101,7 +101,7 @@ class SmackEnvironment(private val mesos: MesosCluster,
     * An optional that contains the informations of the cassandra cluster;
     * None if the cluster doesn't exist
     */
-  def getCassandraInfo: Option[CassandraConnectionInfo] = {
+  def getCassandraConnectionInfo: Option[CassandraConnectionInfo] = {
     this.cassandraCluster.getConnectionInfo
   }
 
@@ -114,7 +114,7 @@ class SmackEnvironment(private val mesos: MesosCluster,
     * An optional that contains the informations of the kafka cluster;
     * None if the cluster doesn't exist
     */
-  def getKafkaInfo: Option[KafkaConnectionInfo] = {
+  def getKafkaConnectionInfo: Option[KafkaConnectionInfo] = {
     this.kafkaCluster.getConnectionInfo
   }
 

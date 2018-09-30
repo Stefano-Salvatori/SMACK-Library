@@ -4,10 +4,13 @@ import task.CassandraTask.CassandraVariable.CassandraVariable
 import Container._
 
 object CassandraTask {
-
   val CASSANDRA_CONTAINER =
     Container("DOCKER", DockerContainer("cassandra:latest", "HOST", true, true, Array(7199, 7000,
                                                                                        7001, 9160, 9042)))
+
+  def apply(id: String, cpus: Double, mem: Double, disk: Double,
+            cmd: Option[String], instances: Int = 1): CassandraTask =
+    new CassandraTask(id, cpus, mem, disk, cmd, instances)
 
   object CassandraVariable extends Enumeration {
     type CassandraVariable = Value

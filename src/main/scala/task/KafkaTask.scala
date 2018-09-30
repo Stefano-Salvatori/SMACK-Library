@@ -8,6 +8,9 @@ object KafkaTask {
   val KAFKA_CONTAINER =
     Container("DOCKER", DockerContainer("wurstmeister/kafka", "HOST", true, true, Array()))
 
+  def apply(id: String, cpus: Double, mem: Double, disk: Double, cmd: Option[String], instances: Int = 1): KafkaTask =
+    new KafkaTask(id, cpus, mem, disk, cmd, instances)
+
   object KafkaVariable extends Enumeration {
     type KafkaVariable = Value
 

@@ -22,7 +22,7 @@ private class KafkaCluster(override val mesos: MesosCluster,
     *         are listening on;
     *         None if the cluster doesn't exist
     */
-  def getConnectionInfo: Option[KafkaConnectionInfo] = {
+  override def getConnectionInfo: Option[KafkaConnectionInfo] = {
     mesos.getTaskInfo(this.clusterName) match {
       case Some(info) =>
         val tasks = parse(info)
@@ -37,9 +37,8 @@ private class KafkaCluster(override val mesos: MesosCluster,
   }
 
 
-  def run(nodes: Int, cpus: Double, memory: Double) = {
-    val kafka = new KafkaTask(this.clusterName, cpus, memory, disk = 0,
-                               cmd = None, instances = nodes)
+  override def nodeTask(cpus: Double, memory: Double) = {
+    val kafka = KafkaTask(this.clusterName, cpus, memory, disk = 0,cmd = None)
     kafka.set(KafkaVariable.HOSTNAME_COMMAND,
                "ip -4 route get 8.8.8.8 | awk {'print $7'} | tr -d '\\n'")
     kafka.set(KafkaVariable.KAFKA_ZOOKEEPER_CONNECT,
@@ -52,8 +51,7 @@ private class KafkaCluster(override val mesos: MesosCluster,
                "INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT")
     kafka.set(KafkaVariable.KAFKA_INTER_BROKER_LISTENER_NAME, "INSIDE")
     kafka.setEnvVariable("KAFKA_DELETE_TOPIC_ENABLE", "true")
-
-    mesos.run(kafka)
+    kafka
   }
 
 

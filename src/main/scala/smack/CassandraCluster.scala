@@ -21,7 +21,7 @@ private class CassandraCluster(override val mesos: MesosCluster, override val cl
     *         listening on;
     *         None if the cluster doesn't exist
     */
-  def getConnectionInfo = {
+  override def getConnectionInfo = {
     mesos.getTaskInfo(this.clusterName) match {
       case Some(info) =>
         val tasks = parse(info)
@@ -32,10 +32,10 @@ private class CassandraCluster(override val mesos: MesosCluster, override val cl
     }
   }
 
-  def run(nodes: Int, cpus: Double, memory: Double) = {
-    val task = new CassandraTask(this.clusterName, cpus, memory, 0, None, nodes)
+  override def nodeTask(cpus: Double, memory: Double) = {
+    val task = CassandraTask(this.clusterName, cpus, memory, 0, None)
     task.set(CassandraVariable.CASSANDRA_CLUSTER_NAME, this.clusterName)
     task.set(CassandraVariable.CASSANDRA_SEEDS, mesos.agents.map(_.getIp).mkString(","))
-    mesos.run(task)
+    task
   }
 }
