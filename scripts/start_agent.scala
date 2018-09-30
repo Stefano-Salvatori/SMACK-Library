@@ -51,8 +51,6 @@ object Main extends App {
   println(s"Starting mesos agent on $myIp")
 
   "sudo service mesos-slave start" !
-
 }
-
 Main.main(args)
 

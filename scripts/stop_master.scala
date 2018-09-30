@@ -14,8 +14,8 @@ object Main extends App {
   "sudo service zookeeper stop" !!
 
   "sudo service marathon stop" !!
-
 }
 
 Main.main(args)
+
 

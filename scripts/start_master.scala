@@ -67,9 +67,6 @@ object Main extends App {
   "sudo service zookeeper restart" !
 
   "sudo service mesos-master restart" !
-
-
 }
-
 Main.main(args)
 
