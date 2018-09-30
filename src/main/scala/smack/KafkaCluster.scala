@@ -18,7 +18,7 @@ private class KafkaCluster(override val mesos: MesosCluster,
                            override val clusterName: String) extends MarathonCluster {
 
   /**
-    * @return An optional with a map that associates ip address of the broker to tje port they
+    * @return An optional with a map that associates ip address of the broker to the port they
     *         are listening on;
     *         None if the cluster doesn't exist
     */

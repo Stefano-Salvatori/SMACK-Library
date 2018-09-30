@@ -7,6 +7,9 @@ import ch.ethz.ssh2.{Connection, SCPClient, StreamGobbler}
 
 object Node {
 
+  def apply(ip: String, usr: String, keyPath: String, keyPsw: String): Node =
+    new Node(ip, usr, keyPath, keyPsw)
+
 }
 
 case class Node(private val ip: String,

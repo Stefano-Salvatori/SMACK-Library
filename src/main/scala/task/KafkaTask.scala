@@ -6,7 +6,7 @@ import Container._
 object KafkaTask {
 
   val KAFKA_CONTAINER =
-    Container("DOCKER",DockerContainer("wurstmeister/kafka","HOST",true,true,Array()))
+    Container("DOCKER", DockerContainer("wurstmeister/kafka", "HOST", true, true, Array()))
 
   object KafkaVariable extends Enumeration {
     type KafkaVariable = Value
@@ -61,13 +61,8 @@ object KafkaTask {
 
 }
 
-class KafkaTask(id: String,
-                cpus: Double,
-                mem: Double,
-                disk: Double,
-                cmd: Option[String],
-                instances: Int = 1)
-  extends GenericTask(id, cpus, mem, disk, cmd,KafkaTask.KAFKA_CONTAINER,Map(), instances) {
+class KafkaTask(id: String, cpus: Double, mem: Double, disk: Double, cmd: Option[String], instances: Int = 1)
+  extends GenericTask(id, cpus, mem, disk, cmd, KafkaTask.KAFKA_CONTAINER, Map(), instances) {
 
 
   def set(name: KafkaVariable, value: String) = {

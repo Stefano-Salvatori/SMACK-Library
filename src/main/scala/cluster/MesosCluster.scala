@@ -1,6 +1,6 @@
 package cluster
 
-import java.io.FileNotFoundException
+import java.io.{File, FileNotFoundException}
 
 import cluster.MesosCluster._
 import net.liftweb.json.{DefaultFormats, parse}
@@ -12,19 +12,19 @@ import scala.sys.process._
 
 object MesosCluster {
 
-  case class ClusterConfigurations(clusterName: String,
-                                   user: String,
-                                   sshKeyPath: String,
-                                   sshKeyPassword: String,
-                                   masters: List[String],
-                                   agents: List[String])
+  case class JsonConfig(clusterName: String,
+                        user: String,
+                        sshKeyPath: String,
+                        sshKeyPassword: String,
+                        masters: List[String],
+                        agents: List[String])
 
   private val DEFAULT_NAME: String = "Mesos-Cluster"
 
   def fromJson(jsonPath: String): MesosCluster = {
     implicit val formats = net.liftweb.json.DefaultFormats
     val fileContents: String = Source.fromFile(jsonPath).getLines.mkString
-    val config: ClusterConfigurations = parse(fileContents).extract[ClusterConfigurations]
+    val config: JsonConfig = parse(fileContents).extract[JsonConfig]
     new MesosClusterBuilder()
       .setClusterName(config.clusterName)
       .setMasters(config.masters)
@@ -67,7 +67,7 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
 
   /**
     * @return
-    *         the string to connect to zookeeper
+    * the string to connect to zookeeper
     */
   def zkConnectionString: String = s"zk://${masters.map(_.getIp.concat(":2181")).mkString(",")}"
 
@@ -94,7 +94,8 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
     Utils.curlCmd + " -X POST -H \"Content-type: application/json\" " +
       s"${masters.head.getIp}:8080/v2/apps " +
       s"-d@${marathonTask.id}.json" !!
-    //new File(s"${marathonTask.id}.json").delete()
+
+    new File(s"${marathonTask.id}.json").delete()
     //println(prettyRender(parse(response)))
   }
 
@@ -132,7 +133,7 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
       Some(scala.io.Source.fromURL(s"http://${masters.head.getIp}:8080/v2/apps/${marathonTask.id}")
         .mkString)
     } catch {
-      case noApp: FileNotFoundException => None
+      case _: FileNotFoundException => None
     }
 
   }
@@ -145,18 +146,18 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
     */
   override def addAgent(node: Node) = {
     println("Adding agent to the cluster")
-    node.executeScript(InstallAgent, printResult = true)
+    node.executeScript(InstallAgent)
     this.agents = node :: this.agents
     this.setHostnames()
-    node.executeScript(StartAgent, printResult = true, masters.map(_.getIp): _*)
+    node.executeScript(StartAgent, masters.map(_.getIp): _*)
   }
 
   /**
     * Shutdown the cluster. (All running tasks will be killed)
     */
   override def shutdownCluster() = {
-    masters.foreach(_.executeScript(StopMaster,printResult = true))
-    agents.foreach(_.executeScript(StopAgent,printResult = true))
+    masters.foreach(_.executeScript(StopMaster))
+    agents.foreach(_.executeScript(StopAgent))
   }
 
   /**
@@ -181,7 +182,7 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
     this.agents.find(agent => agent.getIp.equals(ip)) match {
       case None => println("Cannot find an agent with this ip")
       case Some(n) =>
-        n.executeCommand("sudo service mesos-slave stop")
+        n.executeScript(StopAgent)
         this.agents = this.agents.filter(agent => agent != n)
     }
 
@@ -191,7 +192,7 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
     val all = masters ::: agents
     all.foreach(node => {
       val args = all.filter(_ != node).map(n => s"${n.getIp} ${n.getHostname}").mkString(" ")
-      node.executeScript(SetHosts, printResult = true, args)
+      node.executeScript(SetHosts, args)
     })
   }
 
@@ -199,18 +200,16 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
     * Install the required software on each node of the cluster.
     */
   private def installComponents(): Unit = {
-    masters.foreach(_.executeScript(InstallMaster, printResult = true))
-    agents.foreach(_.executeScript(InstallAgent, printResult = true))
+    masters.foreach(_.executeScript(InstallMaster))
+    agents.foreach(_.executeScript(InstallAgent))
   }
 
   /**
     * Start mesos masters and mesos agents
     **/
   private def startCluster(): Unit = {
-    masters.foreach(m => m.executeScript(StartMaster, printResult = true,
-                                          clusterName :: masters.map(_.getIp): _*))
-    agents.foreach(a => a.executeScript(StartAgent, printResult = true,
-                                         masters.map(_.getIp): _*))
+    masters.foreach(m => m.executeScript(StartMaster, clusterName :: masters.map(_.getIp): _*))
+    agents.foreach(a => a.executeScript(StartAgent, masters.map(_.getIp): _*))
   }
 
   /**
@@ -218,8 +217,7 @@ class MesosCluster(val clusterName: String, val masters: List[Node], var agents:
     * applications over the cluster.
     */
   private def startMarathon(): Unit = {
-    masters.foreach(m =>
-      m.executeScript(StartMarathon, printResult = true, masters.map(_.getIp): _*))
+    masters.foreach(m => m.executeScript(StartMarathon, masters.map(_.getIp): _*))
   }
 
 }

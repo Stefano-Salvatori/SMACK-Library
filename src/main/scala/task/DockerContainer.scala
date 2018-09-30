@@ -10,7 +10,7 @@ object DockerContainer {
 
 /**
   * @param image
-  * docekr image to use for this container
+  * docker image to use for this container
   * @param network
   * network mode (HOST or BRIDGE)
   * @param forcePullImage
