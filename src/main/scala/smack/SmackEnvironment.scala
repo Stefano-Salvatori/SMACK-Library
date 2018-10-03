@@ -1,7 +1,7 @@
 package smack
 
 import cluster.MesosCluster
-import net.liftweb.json.JsonAST.{JField, JObject, JString}
+import net.liftweb.json.JsonAST.{JField, JObject, JString, JValue}
 import net.liftweb.json.parse
 import smack.CassandraCluster.CassandraConnectionInfo
 import smack.KafkaCluster.KafkaConnectionInfo
@@ -126,11 +126,9 @@ class SmackEnvironment(private val mesos: MesosCluster,
     this.mesos.getTaskInfo(this.sparkDispathcerTask) match {
       case Some(info) =>
         val tasks = parse(info)
-        val dispatcherIp = tasks find {
-          case JField("host", _) => true
-          case _ => false
-        }
-        Some(dispatcherIp.get.extract[String])
+        val dispatcherIp = for {JObject(task) <- tasks
+                                JField("host", JString(ip)) <- task} yield ip
+        Some(dispatcherIp(0))
       case None => None
     }
 

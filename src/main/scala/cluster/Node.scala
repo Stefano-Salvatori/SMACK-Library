@@ -7,9 +7,6 @@ import ch.ethz.ssh2.{Connection, SCPClient, StreamGobbler}
 
 object Node {
 
-  def apply(ip: String, usr: String, keyPath: String, keyPsw: String): Node =
-    new Node(ip, usr, keyPath, keyPsw)
-
 }
 
 case class Node(private val ip: String,
@@ -32,14 +29,12 @@ case class Node(private val ip: String,
     *
     * @param script
     * the [[cluster.Script]] to execute.
-    * @param printResult
-    * whether or not to print the result of the script on the console
     * @param params
     * the param to pass as arguments of the script
     * @return
     * the result string
     */
-  def executeScript(script: Script, params: String*)(printResult: Boolean = true) = {
+  def executeScript(script: Script, params: String*) = {
     val scriptFile = new File(script.path)
     val conn = new Connection(this.getIp)
     conn.connect()
@@ -51,7 +46,7 @@ case class Node(private val ip: String,
     ouputStream.write(Files.readAllBytes(Paths.get(script.path)))
     ouputStream.close()
     conn.close()
-    val result = this.executeCommand(s"./${scriptFile.getName} ${params.mkString(" ")}", printResult)
+    val result = this.executeCommand(s"./${scriptFile.getName} ${params.mkString(" ")}")
     this.executeCommand(s"rm ./${scriptFile.getName}", printResult = false)
     result
   }
